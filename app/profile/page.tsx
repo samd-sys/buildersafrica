@@ -1,4 +1,6 @@
+
 "use client";
+
 import ProfileEditor from "./components/ProfileEditor";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -14,7 +16,6 @@ function regionsFromList(list: unknown): Regions {
   const normalized = normalizeToStringArray(list);
 
   if (normalized.length === 0) {
-    // Sensible default matching the original mock: Africa visible by default.
     return { ...base, africa: true };
   }
 
@@ -23,6 +24,7 @@ function regionsFromList(list: unknown): Regions {
       base[key as RegionKey] = true;
     }
   });
+
   return base;
 }
 
@@ -33,25 +35,28 @@ function normalizeToStringArray(value: unknown): string[] {
 
   if (typeof value === "string") {
     const trimmed = value.trim();
+
     if (trimmed === "") return [];
 
     if (trimmed.startsWith("[")) {
       try {
-        const parsed = JSON.parse(trimmed);
+        const parsed: unknown = JSON.parse(trimmed);
+
         if (Array.isArray(parsed)) {
-          return parsed.filter((v): v is string => typeof v === "string");
+          return parsed.filter(
+            (v): v is string => typeof v === "string"
+          );
         }
       } catch {
-        // not valid JSON — fall through to comma-splitting below
+        // Continue with other supported formats.
       }
     }
 
     if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-      // Postgres array literal, e.g. "{africa,asia}"
       return trimmed
         .slice(1, -1)
         .split(",")
-        .map((s) => s.trim())
+        .map((s) => s.trim().replace(/^"|"$/g, ""))
         .filter(Boolean);
     }
 
@@ -81,132 +86,172 @@ export default function Profile() {
   const [website, setWebsite] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [isPublic, setIsPublic] = useState(true);
-  const [regions, setRegions] = useState<Regions>(regionsFromList(null));
+  const [regions, setRegions] = useState<Regions>(
+    regionsFromList(null)
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
 
-  // Sidebar animation (driven by the app's global shell sidebar elsewhere)
+  // Keep the existing application sidebar hover behavior.
   useEffect(() => {
-    const handleSidebarHover = (event: CustomEvent) => {
-      setIsSidebarHovered(event.detail.isHovered);
+    const handleSidebarHover = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        isHovered: boolean;
+      }>;
+
+      setIsSidebarHovered(Boolean(customEvent.detail?.isHovered));
     };
 
-    window.addEventListener(
-      "sidebarHover",
-      handleSidebarHover as EventListener
-    );
+    window.addEventListener("sidebarHover", handleSidebarHover);
 
     return () => {
       window.removeEventListener(
         "sidebarHover",
-        handleSidebarHover as EventListener
+        handleSidebarHover
       );
     };
   }, []);
 
-  // Load the logged-in user's profile
-  const loadProfile = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    if (data) {
-      setName(data.full_name || "");
-      setBio(data.bio || "");
-      setSkills(data.skills || []);
-      setGithub(data.github_url || "");
-      setCountry(data.country || "");
-      setProfessionalTitle(data.professional_title || "");
-      setLinkedin(data.linkedin_url || "");
-      setWebsite(data.website_url || "");
-      setAvatarUrl(data.avatar_url || "");
-      setIsPublic(data.is_public ?? true);
-      setRegions(regionsFromList(data.visible_regions));
-    }
-  };
-
+  // Load the logged-in user's profile.
   useEffect(() => {
-    loadProfile();
-  }, []);
+    let cancelled = false;
 
-  // Save profile
+    async function loadProfile() {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError) {
+        console.error("Unable to get authenticated user:", authError);
+        return;
+      }
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (error) {
+        console.error("Error loading profile:", error);
+        return;
+      }
+
+      if (data) {
+        setName(data.full_name || "");
+        setBio(data.bio || "");
+        setSkills(normalizeToStringArray(data.skills));
+        setGithub(data.github_url || "");
+        setCountry(data.country || "");
+        setProfessionalTitle(data.professional_title || "");
+        setLinkedin(data.linkedin_url || "");
+        setWebsite(data.website_url || "");
+        setAvatarUrl(data.avatar_url || "");
+        setIsPublic(data.is_public ?? true);
+        setRegions(regionsFromList(data.visible_regions));
+      }
+    }
+
+    void loadProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  // Save profile using your existing database columns.
   const saveProfile = async () => {
     setIsSaving(true);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
-    if (!user) {
-      alert("You must be logged in.");
-      setIsSaving(false);
-      return;
-    }
+      if (authError || !user) {
+        alert("You must be logged in.");
+        return;
+      }
 
-    const { error } = await supabase.from("profiles").upsert([
-      {
-        user_id: user.id,
-        full_name: name,
-        bio,
-        skills: skills,
-        github_url: github,
-        country,
-        professional_title: professionalTitle,
-        linkedin_url: linkedin,
-        website_url: website,
-        avatar_url: avatarUrl,
-        is_public: isPublic,
-        visible_regions: regionsToList(regions),
-      },
-    ]);
+      const { error } = await supabase
+        .from("profiles")
+        .upsert(
+          [
+            {
+              user_id: user.id,
+              full_name: name,
+              bio,
+              skills,
+              github_url: github,
+              country,
+              professional_title: professionalTitle,
+              linkedin_url: linkedin,
+              website_url: website,
+              avatar_url: avatarUrl,
+              is_public: isPublic,
+              visible_regions: regionsToList(regions),
+            },
+          ],
+          { onConflict: "user_id" }
+        );
 
-    setIsSaving(false);
+      if (error) {
+        alert(error.message);
+        return;
+      }
 
-    if (error) {
-      alert(error.message);
-    } else {
       alert("Profile saved successfully!");
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      alert("An unexpected error occurred while saving your profile.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  // Log out
+  // Log out.
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error("Logout failed:", error);
+      alert("Unable to log out. Please try again.");
+      return;
+    }
+
     router.push("/");
   };
 
-  // Avatar upload -> Supabase Storage, then store the public URL on the profile
+  // Upload avatar to Supabase Storage.
   const handleAvatarUpload = async (file: File) => {
     const {
       data: { user },
+      error: authError,
     } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (authError || !user) {
       alert("You must be logged in.");
       return;
     }
 
-    const fileExt = file.name.split(".").pop();
+    const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const filePath = `${user.id}-${Date.now()}.${fileExt}`;
 
-    // NOTE: change "avatars" below if your Supabase Storage bucket
-    // for profile pictures has a different name.
     const { error: uploadError } = await supabase.storage
       .from("avatars")
-      .upload(filePath, file, { upsert: true });
+      .upload(filePath, file, {
+        upsert: true,
+        contentType: file.type || undefined,
+      });
 
     if (uploadError) {
       alert(uploadError.message);
@@ -219,59 +264,59 @@ export default function Profile() {
 
     setAvatarUrl(publicUrl);
 
-    // Tell the navbar to swap its Profile icon for the new photo right
-    // away, without needing a full page reload.
     window.dispatchEvent(
-      new CustomEvent("avatarUpdated", { detail: { avatarUrl: publicUrl } })
+      new CustomEvent("avatarUpdated", {
+        detail: { avatarUrl: publicUrl },
+      })
     );
   };
 
   return (
-    <div
-      className={`h-screen overflow-hidden bg-[#09090B] p-10 flex flex-col transition-all duration-500 ease-in-out ${
-        isSidebarHovered ? "ml-16" : "ml-0"
+    <main
+      className={`mt-3 flex h-[calc(100dvh-1.5rem)] min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-white/20 bg-[#09090B] text-white sm:mt-4 sm:rounded-2xl md:mt-6 ${
+        isSidebarHovered ? "md:ml-1" : "md:-ml-14"
       }`}
       style={{
-        transform: isSidebarHovered ? "scale(1.005)" : "scale(1)",
-        filter: isSidebarHovered ? "brightness(0.98)" : "brightness(1)",
-        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+        transition: "margin 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
-      {/* Page Header — fixed, never scrolls */}
-      <div className="flex-1 min-h-0">
-        <ProfileEditor
-          profile={{
-            name,
-            bio,
-            skills,
-            professionalTitle,
-            github,
-            country,
-            linkedin,
-            website,
-            avatarUrl,
-            isPublic,
-            regions,
-          }}
-          setters={{
-            setName,
-            setBio,
-            setSkills,
-            setGithub,
-            setCountry,
-            setProfessionalTitle,
-            setLinkedin,
-            setWebsite,
-            setAvatarUrl,
-            setIsPublic,
-            setRegions,
-          }}
-          onSave={saveProfile}
-          onLogout={handleLogout}
-          onAvatarFileSelected={handleAvatarUpload}
-          isSaving={isSaving}
-        />
+      {/* The page and editor remain fixed to the available height. */}
+      <div className="min-h-0 flex-1 overflow-hidden">
+        <div className="mx-auto h-full min-h-0 w-full max-w-7xl px-2 py-2 sm:px-4 sm:py-4 md:px-5 lg:px-6">
+          <ProfileEditor
+            profile={{
+              name,
+              bio,
+              skills,
+              professionalTitle,
+              github,
+              country,
+              linkedin,
+              website,
+              avatarUrl,
+              isPublic,
+              regions,
+            }}
+            setters={{
+              setName,
+              setBio,
+              setSkills,
+              setGithub,
+              setCountry,
+              setProfessionalTitle,
+              setLinkedin,
+              setWebsite,
+              setAvatarUrl,
+              setIsPublic,
+              setRegions,
+            }}
+            onSave={saveProfile}
+            onLogout={handleLogout}
+            onAvatarFileSelected={handleAvatarUpload}
+            isSaving={isSaving}
+          />
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

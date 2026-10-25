@@ -80,26 +80,26 @@ export default function Builders() {
   };
 
   return (
-    <div
-      className={`px-4 mt-6 -ml-10 min-h-149 w-280 rounded-2xl border border-[#1F1F23] overflow-hidden bg-[#09090B] text-white transition-all duration-500 ease-in-out ${
-        isSidebarHovered ? "ml-16" : "ml-0"
-      }`}
-      style={{
-        transform: isSidebarHovered ? "scale(1.005)" : "scale(1)",
-        filter: isSidebarHovered ? "brightness(0.98)" : "brightness(1)",
-        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-      }}
-    >
+<div
+  className={`mt-3 min-h-[calc(100dvh-1.5rem)] w-full min-w-0 max-w-full rounded-xl border border-[#1F1F23] bg-[#09090B] text-white sm:mt-4 sm:rounded-2xl md:mt-6 md:h-[calc(100dvh-1.5rem)] md:overflow-hidden ${
+    isSidebarHovered ? "md:ml-1" : "md:-ml-14"
+  }`}
+  style={{
+    transition: "margin 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+  }}
+>
       
-      <div className="mx-auto max-w-8xl px-4 py-10 space-y-2">
-
+        <div className="mx-auto w-full max-w-none space-y-4 px-3 py-4 sm:px-5 sm:py-6 md:px-6 md:py-8">
         {/* Header card — online status and CTA */}
-        <div className="-mx-8 -mt-10 rounded-2xl border border-[#1F1F23] bg-[#0F0F11] py-2">
-          <div className="flex items-center justify-between px-4">
-            <OnlineStatusBar count={builders.length} />
-            <FindTeamMemberButton onClick={handleFindTeamMember} />
-          </div>
-        </div>
+        <div className="rounded-xl border border-[#1F1F23] bg-[#0F0F11] p-3 sm:p-4">
+  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <OnlineStatusBar count={builders.length} />
+
+    <div className="w-full sm:w-auto">
+      <FindTeamMemberButton onClick={handleFindTeamMember} />
+    </div>
+  </div>
+</div>
 
         <div className="flex justify-center">
           <div className="w-full max-w-3xl">
