@@ -14,7 +14,7 @@ const submitIdea = async () => {
 const { data: { user } } = await supabase.auth.getUser()
 
 const { error } = await supabase
-.from("ideas")
+.from("projects")
 .insert([
 {
 title,

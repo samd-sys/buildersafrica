@@ -13,7 +13,7 @@ const [team,setTeam] = useState<any[]>([])
 const loadStartup = async () => {
 
 const { data } = await supabase
-.from("ideas")
+.from("projects")
 .select("*")
 .eq("id", ideaId)
 .single()
