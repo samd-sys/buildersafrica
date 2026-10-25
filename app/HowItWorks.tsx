@@ -98,41 +98,36 @@ const FOUNDER_STEPS: Step[] = [
   },
 ];
 
-// Dashed SVG connector between steps
-
+/* Dashed connector between steps */
 function Connector({ flip }: { flip: boolean }) {
   return (
-    <div className="relative hidden md:flex items-center justify-center h-20 w-full">
+    <div className="relative hidden h-20 w-full items-center justify-center md:flex">
       <svg
         viewBox="0 0 600 80"
         preserveAspectRatio="none"
-        className="w-full h-full"
+        className="h-full w-full"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
       >
-        {flip ? (
-          <path
-            strokeWidth="1.5"
-            strokeDasharray="6 5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        ) : (
-          <path
-            stroke="rgba(255,255,255,0.2)"
-            strokeWidth="1.5"
-            strokeDasharray="6 5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        )}
+        <path
+          d={
+            flip
+              ? "M300 0 C300 35 180 45 180 80"
+              : "M300 0 C300 35 420 45 420 80"
+          }
+          stroke="rgba(255,255,255,0.2)"
+          strokeWidth="1.5"
+          strokeDasharray="6 5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     </div>
   );
 }
 
-
-// Card with a full-card screenshot
+/* Responsive step card */
 function StepCard({
   step,
   index,
@@ -142,64 +137,64 @@ function StepCard({
 }) {
   const isRight = index % 2 !== 0;
   const isFinal = index === 3;
-  const isLeft = index % 2 === 0 && index !== 3;
+  const isLeft = index % 2 === 0 && !isFinal;
 
   return (
-    <div className="flex flex-col items-center w-full">
-      {/* Step pill label */}
-      
-{/* Step pill label */}
-<div
-  className={`relative z-10 -mb-3 w-full flex ${
-    isFinal
-      ? "justify-center"
-      : isRight
-      ? "md:justify-end md:pr-80"
-      : "md:justify-start md:pl-80"
-  } ${isFinal ? "mt-20" : "-mt-12"}`}
->
-  <span className="inline-flex items-center rounded-full bg-[#111] border border-white/15 px-6 py-1.5 text-xs font-semibold text-white shadow-lg">
-    {step.label}
-  </span>
-</div>
+    <div className="flex w-full flex-col items-center">
 
-
-      {/* Full-card image */}
+      {/* STEP LABEL */}
       <div
-  className={`relative w-full md:w-[50%] ${
-    isFinal
-      ? "md:mx-auto"
-      : isLeft
-      ? "md:mr-auto md:ml-30"
-      : isRight
-      ? "md:ml-70"
-      : ""
-  } h-[220px] md:h-[180px] rounded-[34px] border border-white/15 overflow-hidden bg-[#091520]`}
->
-  <img
-    src={step.image}
-    alt={`${step.title} — complete card design`}
-    className="absolute inset-0 w-full h-full object-cover object-center"
-    loading="lazy"
+        className={`relative z-10 -mb-3 flex w-full ${
+          isFinal
+            ? "mt-10 justify-center md:mt-20"
+            : isRight
+              ? "mt-5 md:-mt-12 md:justify-end md:pr-80"
+              : "mt-5 md:-mt-12 md:justify-start md:pl-80"
+        }`}
+      >
+        <span className="inline-flex items-center rounded-full border border-white/15 bg-[#111] px-5 py-1.5 text-xs font-semibold text-white shadow-lg">
+          {step.label}
+        </span>
+      </div>
+
+      {/* STEP IMAGE */}
+      <div
+        className={`relative h-[200px] w-full overflow-hidden rounded-2xl border border-white/15 bg-[#091520] sm:h-[240px] sm:rounded-[28px] md:h-[180px] md:w-[50%] md:rounded-[34px] ${
+          isFinal
+            ? "md:mx-auto"
+            : isLeft
+              ? "md:mr-auto md:ml-30"
+              : isRight
+                ? "md:ml-70"
+                : ""
+        }`}
+      >
+        <img
+          src={step.image}
+          alt={`${step.title} — complete card design`}
+          className="absolute inset-0 h-full w-full object-cover object-center"
+          loading="lazy"
           onError={(e) => {
             const img = e.currentTarget;
             img.style.display = "none";
 
             const parent = img.parentElement;
+
             if (!parent || parent.querySelector(".image-placeholder")) {
               return;
             }
 
             const placeholder = document.createElement("div");
+
             placeholder.className =
-              "image-placeholder absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center bg-[#091520]";
+              "image-placeholder absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#091520] p-6 text-center";
 
             const message = document.createElement("p");
             message.className = "text-sm text-white/60";
             message.textContent = "Full-card screenshot not found";
 
             const path = document.createElement("code");
-            path.className = "text-xs text-[#00AFEF]";
+            path.className = "break-all text-xs text-[#00AFEF]";
             path.textContent = step.image;
 
             placeholder.append(message, path);
@@ -217,35 +212,39 @@ export default function HowItWorks() {
   const steps = tab === "builder" ? BUILDER_STEPS : FOUNDER_STEPS;
 
   return (
-    <section className="relative w-full py-24 md:py-8 px-4 md:px-8 overflow-hidden">
-      {/* Top divider */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
+    <section className="relative w-full max-w-full overflow-x-clip px-4 py-16 sm:py-20 md:px-8 md:py-8">
 
-      <div className="relative z-10 mx-auto max-w-5xl space-y-14">
-        {/* Heading */}
-        <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight tracking-tight">
+      {/* TOP DIVIDER */}
+      <div className="absolute left-1/2 top-0 h-px w-full max-w-5xl -translate-x-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+      <div className="relative z-10 mx-auto w-full max-w-5xl space-y-12 sm:space-y-14">
+
+        {/* HEADING */}
+        <div className="mx-auto max-w-2xl space-y-4 text-center">
+          <h2 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
             How <span className="text-white">Builders</span>
             <span className="text-[#00AFEF]">Africa</span> Works
           </h2>
 
-          <p className="text-base text-white/40 leading-relaxed">
+          <p className="text-sm leading-relaxed text-white/50 sm:text-base">
             From profile to production — here is the path that builders and
             founders across the continent are taking every day.
           </p>
         </div>
 
-        {/* Builder / Founder toggle */}
-        <div className="flex justify-center -mt-6">
-          <div className="flex rounded-2xl border border-white/10 bg-white/[0.03] -mt-4 p-1.5 gap-1">
+        {/* BUILDER / FOUNDER TOGGLE */}
+        <div className="flex justify-center">
+          <div className="flex max-w-full gap-1 rounded-2xl border border-white/10 bg-white/[0.03] p-1.5">
             {(["builder", "founder"] as const).map((t) => (
               <button
                 key={t}
+                type="button"
                 onClick={() => setTab(t)}
-                className={`px-8 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                aria-pressed={tab === t}
+                className={`rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 sm:px-8 sm:text-sm ${
                   tab === t
                     ? "bg-[#00AFEF] text-slate-950 shadow-md shadow-[#00AFEF]/20"
-                    : "text-white/40 hover:text-white"
+                    : "text-white/50 hover:text-white"
                 }`}
               >
                 {t === "builder" ? "For Builders" : "For Founders"}
@@ -254,13 +253,12 @@ export default function HowItWorks() {
           </div>
         </div>
 
-        {/* Journey */}
-        <div className="mt-24 -space-y-4">
+        {/* JOURNEY */}
+        <div className="mt-8 space-y-8 sm:mt-12 sm:space-y-10 md:mt-24 md:space-y-0">
           {steps.map((step, i) => (
-            <div key={`${tab}-${i}`}>
+            <div key={`${tab}-${i}`} className="w-full">
               <StepCard step={step} index={i} />
 
-              {/* Connectors between steps */}
               {i < steps.length - 1 && (
                 <Connector flip={i % 2 === 0} />
               )}
@@ -269,8 +267,8 @@ export default function HowItWorks() {
         </div>
       </div>
 
-      {/* Bottom divider */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
+      {/* BOTTOM DIVIDER */}
+      <div className="absolute bottom-0 left-1/2 h-px w-full max-w-5xl -translate-x-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
     </section>
   );
 }
