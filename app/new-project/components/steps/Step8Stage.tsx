@@ -35,7 +35,6 @@ export default function Step8Stage({ value, onChange, error }: Props) {
                 <span className="text-xs font-bold text-gray-600 w-4">
                   {index + 1}
                 </span>
-                <span className="text-xl">{stage.icon}</span>
               </div>
               <div>
                 <p className={`text-sm font-semibold ${isSelected ? "text-white" : "text-gray-300"}`}>

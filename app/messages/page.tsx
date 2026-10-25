@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { DMConversation, ConversationStatus } from "./types";
@@ -12,7 +12,7 @@ import ChatToggle, { ChatMode } from "./group-chat/components/ChatToggle";
 import { GroupConversation } from "./group-chat/groupTypes";
 import { MessageSquare } from "lucide-react";
 
-export default function MessagesPage() {
+function MessagesContent() {  
   const searchParams = useSearchParams();
   const convParam    = searchParams.get("conv");
   const groupParam   = searchParams.get("group");
@@ -361,5 +361,12 @@ export default function MessagesPage() {
         ) : null}
       </div>
     </div>
+  );
+}
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={null}>
+      <MessagesContent />
+    </Suspense>
   );
 }

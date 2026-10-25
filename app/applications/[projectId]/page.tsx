@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Application, Project } from "../../../apply/[projectId]/types";
+import { Application, Project } from "@/app/apply/[projectId]/types";
 import ApplicationCard from "./components/ApplicationCard";
 import { ArrowLeft, Loader2, InboxIcon } from "lucide-react";
 import Link from "next/link";

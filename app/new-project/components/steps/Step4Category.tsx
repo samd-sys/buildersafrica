@@ -29,7 +29,6 @@ export default function Step4Category({ value, onChange, error }: Props) {
                   : "border-[#1F1F23] bg-[#121215] text-gray-400 hover:border-white/10 hover:text-white"
               }`}
             >
-              <span className="text-2xl">{cat.icon}</span>
               <span className="text-xs font-medium leading-tight">{cat.label}</span>
             </button>
           );
