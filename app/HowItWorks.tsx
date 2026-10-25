@@ -155,18 +155,17 @@ function StepCard({
         </span>
       </div>
 
-      {/* STEP IMAGE */}
-      <div
-className={`relative aspect-[28/10] w-full overflow-hidden rounded-2xl border border-white/15 bg-[#091520] sm:rounded-[28px] md:w-[50%] md:rounded-[34px] ${          isFinal
-            ? "md:mx-auto"
-            : isLeft
-              ? "md:mr-auto md:ml-30"
-              : isRight
-                ? "md:ml-70"
-                : ""
-        }`}
-      >
-        <img
+               {/* STEP IMAGE */}
+         <div
+           className={`relative aspect-[28/10] w-full overflow-hidden rounded-2xl border border-white/15 bg-[#091520] sm:rounded-[28px] md:w-[50%] md:rounded-[34px] ${              
+            isFinal
+           ? "ml-0"
+           : isLeft
+           ? "mr-auto"
+           : "ml-auto"
+           }`}
+           >
+           <img
           src={step.image}
           alt={`${step.title} — complete card design`}
           className="absolute inset-0 h-full w-full object-cover object-center"
