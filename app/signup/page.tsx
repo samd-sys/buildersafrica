@@ -1,4 +1,5 @@
-﻿"use client";
+﻿
+"use client";
 
 import { type ChangeEvent, type FormEvent, useState, useCallback } from "react";
 import Link from "next/link";
@@ -8,7 +9,6 @@ import { Eye, EyeOff } from "lucide-react";
 import { Turnstile } from "@marsidev/react-turnstile";
 
 declare const process: { env: Record<string, string | undefined> };
-// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface FormState {
   name: string;
@@ -26,8 +26,6 @@ interface FormErrors {
   general?: string;
 }
 
-// ─── Password strength ───────────────────────────────────────────────────────
-
 type StrengthLevel = "weak" | "fair" | "good" | "strong";
 
 function getPasswordStrength(password: string): {
@@ -36,80 +34,110 @@ function getPasswordStrength(password: string): {
   width: string;
   color: string;
 } {
-  if (password.length === 0)
+  if (password.length === 0) {
     return { level: "weak", label: "", width: "0%", color: "" };
+  }
 
   let score = 0;
+
   if (password.length >= 12) score++;
   if (password.length >= 16) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
 
-  if (score <= 1) return { level: "weak",   label: "Weak",   width: "25%",  color: "bg-red-500"    };
-  if (score === 2) return { level: "fair",   label: "Fair",   width: "50%",  color: "bg-orange-400" };
-  if (score === 3) return { level: "good",   label: "Good",   width: "75%",  color: "bg-yellow-400" };
-  return              { level: "strong", label: "Strong", width: "100%", color: "bg-[#00AFEF]"  };
+  if (score <= 1) {
+    return { level: "weak", label: "Weak", width: "25%", color: "bg-red-500" };
+  }
+
+  if (score === 2) {
+    return { level: "fair", label: "Fair", width: "50%", color: "bg-orange-400" };
+  }
+
+  if (score === 3) {
+    return { level: "good", label: "Good", width: "75%", color: "bg-yellow-400" };
+  }
+
+  return {
+    level: "strong",
+    label: "Strong",
+    width: "100%",
+    color: "bg-[#00AFEF]",
+  };
 }
 
-// ─── Validation ──────────────────────────────────────────────────────────────
-
-const MAX_NAME_LENGTH  = 80;
+const MAX_NAME_LENGTH = 80;
 const MAX_EMAIL_LENGTH = 254;
-const MAX_PASS_LENGTH  = 128;
-const MIN_PASS_LENGTH  = 12;
+const MAX_PASS_LENGTH = 128;
+const MIN_PASS_LENGTH = 12;
 
 function validate(form: FormState): FormErrors {
   const errors: FormErrors = {};
 
   const name = form.name.trim();
-  if (!name || name.length < 2)
+
+  if (!name || name.length < 2) {
     errors.name = "Please enter at least 2 characters.";
-  else if (name.length > MAX_NAME_LENGTH)
+  } else if (name.length > MAX_NAME_LENGTH) {
     errors.name = `Name must be ${MAX_NAME_LENGTH} characters or fewer.`;
+  }
 
   const email = form.email.trim().toLowerCase();
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.email = "Enter a valid email address.";
-  else if (email.length > MAX_EMAIL_LENGTH)
+  } else if (email.length > MAX_EMAIL_LENGTH) {
     errors.email = "Email address is too long.";
+  }
 
-  if (!form.password || form.password.length < MIN_PASS_LENGTH)
+  if (!form.password || form.password.length < MIN_PASS_LENGTH) {
     errors.password = `Password must be at least ${MIN_PASS_LENGTH} characters.`;
-  else if (form.password.length > MAX_PASS_LENGTH)
+  } else if (form.password.length > MAX_PASS_LENGTH) {
     errors.password = "Password is too long.";
+  }
 
-  if (!form.confirmPassword)
+  if (!form.confirmPassword) {
     errors.confirmPassword = "Please confirm your password.";
-  else if (form.password !== form.confirmPassword)
+  } else if (form.password !== form.confirmPassword) {
     errors.confirmPassword = "Passwords do not match.";
+  }
 
   return errors;
 }
 
-
-// ─── Safe error messages (never expose raw Supabase errors) ──────────────────
-
 function safeErrorMessage(err: unknown): string {
-  if (!(err instanceof Error)) return "Something went wrong. Please try again.";
+  if (!(err instanceof Error)) {
+    return "Something went wrong. Please try again.";
+  }
+
   const msg = err.message.toLowerCase();
 
-  if (msg.includes("already registered") || msg.includes("already exists") || msg.includes("duplicate"))
+  if (
+    msg.includes("already registered") ||
+    msg.includes("already exists") ||
+    msg.includes("duplicate")
+  ) {
     return "An account with this email already exists. Try logging in instead.";
-  if (msg.includes("invalid email"))
-    return "Please enter a valid email address.";
-  if (msg.includes("password"))
-    return "Your password doesn't meet the requirements. Please choose a stronger one.";
-  if (msg.includes("rate limit") || msg.includes("too many"))
-    return "Too many attempts. Please wait a moment and try again.";
-  if (msg.includes("network") || msg.includes("fetch"))
-    return "Network error. Please check your connection and try again.";
+  }
 
-  // Never surface raw DB / Supabase error details
+  if (msg.includes("invalid email")) {
+    return "Please enter a valid email address.";
+  }
+
+  if (msg.includes("password")) {
+    return "Your password doesn't meet the requirements. Please choose a stronger one.";
+  }
+
+  if (msg.includes("rate limit") || msg.includes("too many")) {
+    return "Too many attempts. Please wait a moment and try again.";
+  }
+
+  if (msg.includes("network") || msg.includes("fetch")) {
+    return "Network error. Please check your connection and try again.";
+  }
+
   return "Something went wrong. Please try again.";
 }
-
-// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function Signup() {
   const router = useRouter();
@@ -121,10 +149,10 @@ export default function Signup() {
     confirmPassword: "",
   });
 
-  const [errors, setErrors]           = useState<FormErrors>({});
-  const [loading, setLoading]         = useState(false);
-  const [success, setSuccess]         = useState(false);
-  const [showPassword, setShowPassword]           = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
@@ -132,15 +160,17 @@ export default function Signup() {
 
   function handleChange(e: ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
-    setForm((prev: FormState) => ({ ...prev, [name]: value }));
+
+    setForm((prev) => ({ ...prev, [name]: value }));
+
     if (errors[name as keyof FormErrors]) {
-      setErrors((prev: FormErrors) => ({ ...prev, [name]: undefined }));
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
   }
 
   const handleCaptchaSuccess = useCallback((token: string) => {
     setCaptchaToken(token);
-    setErrors((prev: FormErrors) => ({ ...prev, captcha: undefined }));
+    setErrors((prev) => ({ ...prev, captcha: undefined }));
   }, []);
 
   const handleCaptchaExpire = useCallback(() => {
@@ -151,6 +181,7 @@ export default function Signup() {
     e.preventDefault();
 
     const validationErrors = validate(form);
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
@@ -165,23 +196,22 @@ export default function Signup() {
     setErrors({});
 
     try {
-      // Sanitise inputs — never log or manually store the password
       const cleanEmail = form.email.trim().toLowerCase();
-      const cleanName  = form.name.trim();
+      const cleanName = form.name.trim();
 
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: cleanEmail,
-        password: form.password,          // passed directly to Supabase Auth, never stored elsewhere
+        password: form.password,
         options: {
-          captchaToken,                   // Turnstile token validated server-side by Supabase
+          captchaToken,
           data: {
-            full_name: cleanName,         // stored in auth.users.raw_user_meta_data
-          },                              // the DB trigger reads this to create the profile row
+            full_name: cleanName,
+          },
         },
       });
 
       if (signUpError) throw signUpError;
-      if (!data.user)  throw new Error("Signup failed — no user returned.");
+      if (!data.user) throw new Error("Signup failed — no user returned.");
 
       if (data.session) {
         router.push("/dashboard");
@@ -195,228 +225,359 @@ export default function Signup() {
     }
   }
 
+  // Email confirmation screen
   if (success) {
     return (
-      <div className="flex min-h-120 mt-22 rounded-4xl border border-white/30 items-center justify-center bg-gray px-6">
-        <div className="w-full max-w-xl rounded-3xl border border-white/30 bg-gray p-10">
-          <h1 className="text-3xl font-semibold text-white">
+      <main className="flex min-h-screen w-full items-center justify-center overflow-x-clip bg-black px-4 py-8 text-white sm:px-6">
+        <section className="w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] p-5 shadow-2xl backdrop-blur-xl sm:rounded-3xl sm:p-8 md:p-10">
+          <h1 className="text-2xl font-semibold sm:text-3xl">
             Confirm your email
           </h1>
-          <p className="mt-4 text-slate-400">
-            We sent a confirmation link to
-            <span className="text-white"> {form.email.trim().toLowerCase()}</span>
+
+          <p className="mt-4 break-words text-sm leading-6 text-slate-400 sm:text-base">
+            We sent a confirmation link to{" "}
+            <span className="break-all text-white">
+              {form.email.trim().toLowerCase()}
+            </span>
           </p>
-          <div className="mt-8 flex gap-4">
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link
               href="/login"
-              className="rounded-full border border-cyan-400/30 px-6 py-3 text-cyan-200"
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-cyan-400/30 px-6 py-3 text-center text-cyan-200 transition-colors hover:bg-cyan-400/10"
             >
               Go to Login
             </Link>
+
             <Link
               href="/"
-              className="rounded-full bg-cyan-400 px-6 py-3 text-slate-950"
+              className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#00AFEF] px-6 py-3 text-center font-medium text-slate-950 transition-opacity hover:opacity-90"
             >
               Home
             </Link>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     );
   }
 
-  // ─── Signup form ──────
-
   return (
-    <div className="relative min-h-screen overflow-hidden bg-black-950 flex items-center justify-center px-4">
-
+    <main className="relative flex min-h-screen w-full flex-col overflow-x-clip bg-black text-white">
       {/* Header */}
-      <nav className="absolute top-0 left-0 w-full z-50 border-b border-white/10 bg-gray/40 backdrop-blur-xl">
-        <div className="mx-auto flex h-20 max-w-7xl items-center px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-13.2 w-15 items-center justify-center overflow-hidden rounded-xl">
-              <img src="/B8.png" alt="BuildersAfrica Logo" className="h-16 w-16 object-cover" />
+      <nav className="relative z-10 w-full border-b border-white/10 bg-white/[0.03] backdrop-blur-xl">
+        <div className="mx-auto flex min-h-[76px] w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
+          <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg sm:h-14 sm:w-14">
+              <img
+                src="/B8.png"
+                alt="BuildersAfrica Logo"
+                className="h-full w-full object-contain"
+              />
             </div>
-            <div>
-              <p className="text-white font-bold text-2xl leading-none">
+
+            <div className="min-w-0">
+              <p className="whitespace-nowrap text-lg font-bold leading-tight sm:text-2xl">
                 <span className="text-white">Builders</span>
                 <span className="text-[#00AFEF]">Africa</span>
               </p>
-              <p className="text-white/40 text-sm mt-1">Developers Platform</p>
+
+              <p className="mt-1 text-xs text-white/40 sm:text-sm">
+                Developers Platform
+              </p>
             </div>
-          </div>
+          </Link>
+
           <Link
             href="/"
-            className="absolute top-5 right-5 rounded-md border border-white/10 bg-cyan-gray px-10 py-2 text-lg font-medium text-white/30 transitio"
+            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white/70 transition-colors hover:border-[#00AFEF]/40 hover:text-white sm:px-5 sm:text-base"
           >
-            ← Return
+            <span className="sm:hidden">← Back</span>
+            <span className="hidden sm:inline">← Return</span>
           </Link>
         </div>
       </nav>
 
-      {/* Signup Form — card layout unchanged */}
-      <div className="flex items-center justify-center px-6 py-20">
-        <section className="w-xl bg-white/[0.04] backdrop-blur-2xl border border-white/20 rounded-4xl p-8 shadow-2xl">
-          <h2 className="text-3xl font-semibold text-white">
+      {/* Signup form */}
+      <div className="relative flex flex-1 items-center justify-center px-4 py-8 sm:px-6 sm:py-12">
+        {/* Background grid */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-20"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+          }}
+        />
+
+        <section className="relative z-10 w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] p-4 shadow-2xl backdrop-blur-2xl sm:rounded-3xl sm:p-7 md:p-9">
+          <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">
             Sign up to BuildersAfrica
-          </h2>
+          </h1>
+
+          <p className="mt-2 text-sm leading-6 text-white/45 sm:text-base">
+            Create your account and start building with Africa&apos;s tech
+            community.
+          </p>
 
           {errors.general && (
-            <div className="mt-4 rounded-xl bg-red-500/10 p-4 text-red-200">
+            <div
+              role="alert"
+              className="mt-5 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm leading-6 text-red-200 sm:p-4"
+            >
               {errors.general}
             </div>
           )}
 
-          <form onSubmit={handleSignup} className="mt-6 space-y-5" noValidate>
+          <form
+            onSubmit={handleSignup}
+            className="mt-6 space-y-5 sm:mt-7"
+            noValidate
+          >
+            {/* Full name */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="signup-name"
+                className="block text-sm font-medium text-white/75"
+              >
+                Full name
+              </label>
 
-            {/* Full Name */}
-            <div className="space-y-1">
               <input
+                id="signup-name"
                 name="name"
-                placeholder="Full name"
+                type="text"
+                placeholder="Enter your full name"
                 value={form.name}
                 onChange={handleChange}
                 maxLength={MAX_NAME_LENGTH}
                 autoComplete="name"
-                className={`w-full rounded-xl border px-4 py-4 text-white bg-transparent ${
+                autoCapitalize="words"
+                required
+                aria-invalid={!!errors.name}
+                aria-describedby={errors.name ? "signup-name-error" : undefined}
+                className={`block min-h-12 w-full min-w-0 rounded-xl border bg-transparent px-4 py-3 text-base text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#00AFEF] ${
                   errors.name ? "border-red-500/60" : "border-white/15"
                 }`}
               />
+
               {errors.name && (
-                <p className="text-xs text-red-400 px-1">{errors.name}</p>
+                <p id="signup-name-error" className="px-1 text-xs text-red-400">
+                  {errors.name}
+                </p>
               )}
             </div>
 
             {/* Email */}
-            <div className="space-y-1">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="signup-email"
+                className="block text-sm font-medium text-white/75"
+              >
+                Email address
+              </label>
+
               <input
+                id="signup-email"
                 name="email"
                 type="email"
-                placeholder="Email"
+                placeholder="Enter your email"
                 value={form.email}
                 onChange={handleChange}
                 maxLength={MAX_EMAIL_LENGTH}
                 autoComplete="email"
-                className={`w-full rounded-xl border px-4 py-4 text-white bg-transparent ${
+                inputMode="email"
+                autoCapitalize="none"
+                spellCheck={false}
+                required
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? "signup-email-error" : undefined}
+                className={`block min-h-12 w-full min-w-0 rounded-xl border bg-transparent px-4 py-3 text-base text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#00AFEF] ${
                   errors.email ? "border-red-500/60" : "border-white/15"
                 }`}
               />
+
               {errors.email && (
-                <p className="text-xs text-red-400 px-1">{errors.email}</p>
+                <p id="signup-email-error" className="px-1 text-xs text-red-400">
+                  {errors.email}
+                </p>
               )}
             </div>
 
             {/* Password */}
-            <div className="space-y-1">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="signup-password"
+                className="block text-sm font-medium text-white/75"
+              >
+                Password
+              </label>
+
               <div className="relative">
                 <input
+                  id="signup-password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Password (min. 12 characters)"
+                  placeholder="At least 12 characters"
                   value={form.password}
                   onChange={handleChange}
                   maxLength={MAX_PASS_LENGTH}
                   autoComplete="new-password"
-                  className={`w-full rounded-xl border px-4 py-4 pr-12 text-white bg-transparent ${
+                  required
+                  aria-invalid={!!errors.password}
+                  aria-describedby={
+                    errors.password ? "signup-password-error" : undefined
+                  }
+                  className={`block min-h-12 w-full min-w-0 rounded-xl border bg-transparent py-3 pl-4 pr-12 text-base text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#00AFEF] ${
                     errors.password ? "border-red-500/60" : "border-white/15"
                   }`}
                 />
+
                 <button
                   type="button"
-                  onClick={() => setShowPassword((v: boolean) => !v)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-white/50 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF]"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
                 </button>
               </div>
 
-              {/* Password strength indicator */}
+              {/* Password strength */}
               {form.password.length > 0 && (
-                <div className="space-y-1 px-1">
-                  <div className="h-1 w-full rounded-full bg-white/10 overflow-hidden">
+                <div className="space-y-1.5 px-1 pt-1">
+                  <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
                     <div
                       className={`h-full rounded-full transition-all duration-300 ${strength.color}`}
                       style={{ width: strength.width }}
                     />
                   </div>
-                  <p className={`text-[11px] font-medium ${
-                    strength.level === "weak"   ? "text-red-400"    :
-                    strength.level === "fair"   ? "text-orange-400" :
-                    strength.level === "good"   ? "text-yellow-400" :
-                    "text-[#00AFEF]"
-                  }`}>
-                    {strength.label}
+
+                  <p
+                    className={`text-xs font-medium ${
+                      strength.level === "weak"
+                        ? "text-red-400"
+                        : strength.level === "fair"
+                          ? "text-orange-400"
+                          : strength.level === "good"
+                            ? "text-yellow-400"
+                            : "text-[#00AFEF]"
+                    }`}
+                  >
+                    Password strength: {strength.label}
                   </p>
                 </div>
               )}
 
               {errors.password && (
-                <p className="text-xs text-red-400 px-1">{errors.password}</p>
+                <p
+                  id="signup-password-error"
+                  className="px-1 text-xs text-red-400"
+                >
+                  {errors.password}
+                </p>
               )}
             </div>
 
-            {/* Confirm Password */}
-            <div className="space-y-1">
+            {/* Confirm password */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="signup-confirm-password"
+                className="block text-sm font-medium text-white/75"
+              >
+                Confirm password
+              </label>
+
               <div className="relative">
                 <input
+                  id="signup-confirm-password"
                   name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm password"
+                  placeholder="Re-enter your password"
                   value={form.confirmPassword}
                   onChange={handleChange}
                   maxLength={MAX_PASS_LENGTH}
                   autoComplete="new-password"
-                  className={`w-full rounded-xl border px-4 py-4 pr-12 text-white bg-transparent ${
-                    errors.confirmPassword ? "border-red-500/60" : "border-white/15"
+                  required
+                  aria-invalid={!!errors.confirmPassword}
+                  aria-describedby={
+                    errors.confirmPassword
+                      ? "signup-confirm-password-error"
+                      : undefined
+                  }
+                  className={`block min-h-12 w-full min-w-0 rounded-xl border bg-transparent py-3 pl-4 pr-12 text-base text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#00AFEF] ${
+                    errors.confirmPassword
+                      ? "border-red-500/60"
+                      : "border-white/15"
                   }`}
                 />
+
                 <button
                   type="button"
-                  onClick={() => setShowConfirmPassword((v: boolean) => !v)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
-                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-white/50 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF]"
+                  aria-label={
+                    showConfirmPassword ? "Hide password" : "Show password"
+                  }
                 >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showConfirmPassword ? (
+                    <EyeOff size={19} />
+                  ) : (
+                    <Eye size={19} />
+                  )}
                 </button>
               </div>
+
               {errors.confirmPassword && (
-                <p className="text-xs text-red-400 px-1">{errors.confirmPassword}</p>
+                <p
+                  id="signup-confirm-password-error"
+                  className="px-1 text-xs text-red-400"
+                >
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
 
-            {/* Cloudflare Turnstile CAPTCHA */}
-            <div className="space-y-1">
-              <Turnstile
-                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
-                onSuccess={handleCaptchaSuccess}
-                onExpire={handleCaptchaExpire}
-                options={{ theme: "dark" }}
-              />
+            {/* Cloudflare Turnstile */}
+            <div className="min-w-0 space-y-2">
+              <div className="flex w-full min-w-0 justify-center overflow-x-auto">
+                <Turnstile
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
+                  onSuccess={handleCaptchaSuccess}
+                  onExpire={handleCaptchaExpire}
+                  options={{ theme: "dark" }}
+                />
+              </div>
+
               {errors.captcha && (
-                <p className="text-xs text-red-400 px-1">{errors.captcha}</p>
+                <p role="alert" className="text-center text-xs text-red-400">
+                  {errors.captcha}
+                </p>
               )}
             </div>
 
-            {/* Submit — unchanged */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-2xl bg-[#00AFEF] py-3 font-semibold text-slate-950 disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
+              className="flex min-h-12 w-full items-center justify-center rounded-xl bg-[#00AFEF] px-4 py-3 text-base font-semibold text-slate-950 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:rounded-2xl"
             >
               {loading ? "Creating account..." : "Create account"}
             </button>
 
-            {/* Login link — unchanged */}
-            <p className="mt-6 text-center text-x1 text-white/35">
+            {/* Login link */}
+            <p className="pt-1 text-center text-sm leading-6 text-white/45 sm:text-base">
               Already have an account?{" "}
-              <a href="/login" className="text-[#00AFEF] font-medium hover:underline transition-colors">
+              <Link
+                href="/login"
+                className="whitespace-nowrap font-medium text-[#00AFEF] transition-colors hover:underline"
+              >
                 Login →
-              </a>
+              </Link>
             </p>
           </form>
         </section>
       </div>
-    </div>
+    </main>
   );
 }
