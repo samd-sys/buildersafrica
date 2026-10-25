@@ -103,7 +103,6 @@ function Connector({ flip }: { flip: boolean }) {
   return (
     <div className="relative hidden h-20 w-full items-center justify-center md:flex">
       <svg
-        viewBox="0 0 600 80"
         preserveAspectRatio="none"
         className="h-full w-full"
         fill="none"
@@ -116,7 +115,6 @@ function Connector({ flip }: { flip: boolean }) {
               ? "M300 0 C300 35 180 45 180 80"
               : "M300 0 C300 35 420 45 420 80"
           }
-          stroke="rgba(255,255,255,0.2)"
           strokeWidth="1.5"
           strokeDasharray="6 5"
           strokeLinecap="round"
@@ -159,8 +157,7 @@ function StepCard({
 
       {/* STEP IMAGE */}
       <div
-        className={`relative h-[200px] w-full overflow-hidden rounded-2xl border border-white/15 bg-[#091520] sm:h-[240px] sm:rounded-[28px] md:h-[180px] md:w-[50%] md:rounded-[34px] ${
-          isFinal
+className={`relative aspect-[28/10] w-full overflow-hidden rounded-2xl border border-white/15 bg-[#091520] sm:rounded-[28px] md:w-[50%] md:rounded-[34px] ${          isFinal
             ? "md:mx-auto"
             : isLeft
               ? "md:mr-auto md:ml-30"
