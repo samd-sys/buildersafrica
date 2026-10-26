@@ -1,4 +1,6 @@
+
 "use client";
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { ProjectData, EMPTY_PROJECT } from "./types/project";
@@ -76,22 +78,35 @@ export default function NewProjectPage() {
     const handleSidebarHover = (event: CustomEvent) => {
       setIsSidebarHovered(event.detail.isHovered);
     };
-    window.addEventListener("sidebarHover", handleSidebarHover as EventListener);
+
+    window.addEventListener(
+      "sidebarHover",
+      handleSidebarHover as EventListener
+    );
+
     return () =>
-      window.removeEventListener("sidebarHover", handleSidebarHover as EventListener);
+      window.removeEventListener(
+        "sidebarHover",
+        handleSidebarHover as EventListener
+      );
   }, []);
 
-  const update = <K extends keyof ProjectData>(key: K, value: ProjectData[K]) => {
+  const update = <K extends keyof ProjectData>(
+    key: K,
+    value: ProjectData[K]
+  ) => {
     setData((prev) => ({ ...prev, [key]: value }));
     setError(null);
   };
 
   const handleNext = () => {
     const err = validate(step, data);
+
     if (err) {
       setError(err);
       return;
     }
+
     setError(null);
     setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   };
@@ -104,61 +119,65 @@ export default function NewProjectPage() {
   const handleCreate = async () => {
     setIsSaving(true);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
-      alert("You must be logged in.");
-      setIsSaving(false);
-      return;
-    }
-
-    const { error: dbError } = await supabase.from("projects").insert([
-      {
-        user_id: user.id,
-        title: data.title,
-        description: data.description,
-        category: data.category,
-        stage: data.stage,
-        location: data.location,
-        logo_url: data.logoUrl || null,
-        tech_stack: data.techStack,
-        visibility: "public",
-        team_size: null,
-      },
-    ]);
-
-    // Insert extended fields added via ALTER TABLE
-    // If your projects table doesn't have these columns yet,
-    // run the SQL from connections_table.sql first.
-    if (!dbError) {
-      // Fetch the newly created project id so we can upsert extended fields
-      const { data: newProject } = await supabase
-        .from("projects")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("title", data.title)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (newProject) {
-        await supabase.from("projects").update({
-          problem_statement: data.problemStatement,
-          vision: data.vision,
-          target_audience: data.targetAudience,
-          team_needs: data.teamNeeds,
-        }).eq("id", newProject.id);
+      if (!user) {
+        alert("You must be logged in.");
+        return;
       }
-    }
 
-    setIsSaving(false);
+      const { error: dbError } = await supabase.from("projects").insert([
+        {
+          user_id: user.id,
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          stage: data.stage,
+          location: data.location,
+          logo_url: data.logoUrl || null,
+          tech_stack: data.techStack,
+          visibility: "public",
+          team_size: null,
+        },
+      ]);
 
-    if (dbError) {
-      alert(dbError.message);
-    } else {
-      setIsSuccess(true);
+      // Update the extended project fields after the initial insert.
+      if (!dbError) {
+        const { data: newProject } = await supabase
+          .from("projects")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("title", data.title)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (newProject) {
+          await supabase
+            .from("projects")
+            .update({
+              problem_statement: data.problemStatement,
+              vision: data.vision,
+              target_audience: data.targetAudience,
+              team_needs: data.teamNeeds,
+            })
+            .eq("id", newProject.id);
+        }
+      }
+
+      if (dbError) {
+        alert(dbError.message);
+      } else {
+        setIsSuccess(true);
+      }
+    } catch (err) {
+      console.error("Failed to create project:", err);
+      alert("Something went wrong while creating your project. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -175,27 +194,27 @@ export default function NewProjectPage() {
   const showNav = step > 1 && !isSuccess;
 
   return (
-  <div
-  className={`h-135 w-220 mt-6 rounded-3xl border border-white/29 flex items-center justify-center px-4 py-10 overflow-hidden bg-cover bg-center bg-no-repeat transition-all duration-500 ease-in-out ${
-    isSidebarHovered ? "ml-16" : "ml-0"
-  }`}
-  style={{
-    marginLeft: "6.25rem", // equivalent to ml-25 if needed
-    backgroundImage: "url('/Untitled-2.png')", // Your image path
-    transform: isSidebarHovered ? "scale(1.005)" : "scale(1)",
-    filter: isSidebarHovered ? "brightness(0.98)" : "brightness(1)",
-    transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-  }}
-
+    <div
+      className={`relative mx-auto mt-3 flex min-h-[calc(100dvh-1.5rem)] w-full items-center justify-center overflow-hidden rounded-2xl border border-white/20 bg-cover bg-center bg-no-repeat px-3 py-5 transition-all duration-500 ease-in-out sm:mt-4 sm:min-h-[calc(100dvh-2rem)] sm:rounded-3xl sm:px-5 sm:py-8 md:px-8 lg:mt-6 lg:min-h-[540px] lg:ml-[6.25rem] lg:w-[calc(100%-6.25rem)] lg:px-4 lg:py-10 ${
+        isSidebarHovered ? "lg:scale-[1.005]" : "scale-100"
+      }`}
+      style={{
+        backgroundImage: "url('/Untitled-2.png')",
+        filter: isSidebarHovered ? "brightness(0.98)" : "brightness(1)",
+        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+      }}
     >
-      <div className="w-full max-w-2xl space-y-6">
+      <div className="w-full min-w-0 max-w-2xl space-y-4 sm:space-y-6">
         {/* Progress bar — hidden on welcome and success */}
         {showProgress && (
-          <ProgressBar currentStep={step - 1} totalSteps={TOTAL_STEPS - 1} />
+          <ProgressBar
+            currentStep={step - 1}
+            totalSteps={TOTAL_STEPS - 1}
+          />
         )}
 
         {/* Step card */}
-        <div className="max-h-[75vh] overflow-y-auto overflow-x-hidden rounded-4xl border border-[#1F1F23] bg-[#0F0F11] p-8 shadow-2xl shadow-black/40">
+        <div className="max-h-[70dvh] min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl border border-[#1F1F23] bg-[#0F0F11] p-4 shadow-2xl shadow-black/40 sm:max-h-[75dvh] sm:rounded-3xl sm:p-6 lg:rounded-4xl lg:p-8">
           <StepWrapper step={step}>
             {isSuccess ? (
               <SuccessScreen
@@ -277,11 +296,11 @@ export default function NewProjectPage() {
 
         {/* Bottom navigation */}
         {showNav && !isSuccess && (
-          <div className="flex items-center justify-between">
+          <div className="flex w-full items-center justify-between gap-3">
             <button
               onClick={handleBack}
               disabled={isFirstStep}
-              className="flex items-center gap-2 rounded-xl border border-[#1F1F23] bg-[#0F0F11] px-5 py-2.5 text-sm font-medium text-gray-400 transition-colors hover:text-white hover:border-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex shrink-0 items-center gap-2 rounded-xl border border-[#1F1F23] bg-[#0F0F11] px-4 py-2.5 text-sm font-medium text-gray-400 transition-colors hover:border-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-30 sm:px-5"
             >
               <ChevronLeft size={16} />
               Back
@@ -291,21 +310,21 @@ export default function NewProjectPage() {
               <button
                 onClick={handleCreate}
                 disabled={isSaving}
-                className="flex items-center gap-2 rounded-xl bg-[#00AFEF]/40 px-7 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#00AFEF]/20 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex min-w-0 items-center justify-center gap-2 rounded-xl bg-[#00AFEF]/40 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#00AFEF]/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:px-7"
               >
                 {isSaving ? (
                   <>
-                    <Loader2 size={14} className="animate-spin" />
+                    <Loader2 size={14} className="shrink-0 animate-spin" />
                     Creating...
                   </>
                 ) : (
-                  "Create Project → "
+                  "Create Project →"
                 )}
               </button>
             ) : (
               <button
                 onClick={handleNext}
-                className="rounded-xl bg-[#00AFEF]/50 px-7 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#00AFEF]/30 active:scale-[0.98]"
+                className="shrink-0 rounded-xl bg-[#00AFEF]/50 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#00AFEF]/30 active:scale-[0.98] sm:px-7"
               >
                 Next →
               </button>
