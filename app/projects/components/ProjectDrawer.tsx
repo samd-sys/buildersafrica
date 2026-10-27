@@ -10,6 +10,7 @@ import {
   CalendarDays,
   User,
   ArrowRight,
+  Bookmark,
 } from "lucide-react";
 import { Project, STAGE_META } from "../types";
 import { useRouter } from "next/navigation";
@@ -17,9 +18,18 @@ import { useRouter } from "next/navigation";
 type Props = {
   project: Project | null;
   onClose: () => void;
+  onToggleLike: (id: string) => void;
+  onToggleFollow: (id: string) => void;
+  onToggleBookmark: (id: string) => void;
 };
 
-export default function ProjectDrawer({ project, onClose }: Props) {
+export default function ProjectDrawer({
+  project,
+  onClose,
+  onToggleLike,
+  onToggleFollow,
+  onToggleBookmark,
+}: Props) {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [teamMembers, setTeamMembers] = useState<{ user_id: string; role: string; full_name: string; avatar_url: string }[]>([]);
@@ -169,25 +179,50 @@ export default function ProjectDrawer({ project, onClose }: Props) {
                   )}
                 </div>
 
-                {/* Engagement metrics */}
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <span className="flex items-center gap-1.5">
-                    <Heart size={14} className="text-rose-400" />
-                    {project.likes}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Users size={14} className="text-blue-400" />
-                    {project.followers}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Star size={14} className="text-yellow-400" />
-                    {project.rating.toFixed(1)}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Eye size={14} className="text-purple-400" />
-                    0
-                  </span>
-                </div>
+{/* Engagement */}
+<div className="flex flex-wrap items-center gap-2">
+  <button
+    type="button"
+    onClick={() => onToggleLike(project.id)}
+    aria-pressed={!!project.isLiked}
+    className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+      project.isLiked
+        ? "border-[#00AFEF]/40 bg-[#00AFEF]/10 text-[#00AFEF]"
+        : "border-[#1F1F23] bg-[#121215] text-gray-400 hover:text-white"
+    }`}
+  >
+    <Heart size={13} className={project.isLiked ? "fill-current" : ""} />
+    {project.isLiked ? "Liked" : "Like"} · {project.likes}
+  </button>
+
+  <button
+    type="button"
+    onClick={() => onToggleFollow(project.id)}
+    aria-pressed={!!project.isFollowing}
+    className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+      project.isFollowing
+        ? "border-[#00AFEF]/40 bg-[#00AFEF]/10 text-[#00AFEF]"
+        : "border-[#1F1F23] bg-[#121215] text-gray-400 hover:text-white"
+    }`}
+  >
+    <Users size={13} />
+    {project.isFollowing ? "Following" : "Follow"} · {project.followers}
+  </button>
+
+  <button
+    type="button"
+    onClick={() => onToggleBookmark(project.id)}
+    aria-pressed={!!project.isBookmarked}
+    className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+      project.isBookmarked
+        ? "border-[#00AFEF]/40 bg-[#00AFEF]/10 text-[#00AFEF]"
+        : "border-[#1F1F23] bg-[#121215] text-gray-400 hover:text-white"
+    }`}
+  >
+    <Bookmark size={13} className={project.isBookmarked ? "fill-current" : ""} />
+    {project.isBookmarked ? "Saved" : "Save"}
+  </button>
+</div>
               </div>
 
               {/* Founder */}

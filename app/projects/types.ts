@@ -19,6 +19,9 @@ export type Project = {
   likes: number;
   followers: number;
   rating: number;
+  isLiked?: boolean;
+  isFollowing?: boolean;
+  isBookmarked?: boolean;
 };
 
 export type ActiveFilters = {

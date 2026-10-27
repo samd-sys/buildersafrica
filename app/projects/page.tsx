@@ -10,6 +10,7 @@ import ProjectCard from "./components/ProjectCard";
 import ProjectDrawer from "./components/ProjectDrawer";
 import { FolderOpen, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useProjectEngagement } from "./lib/useProjectEngagement";
 
 function normArray(val: unknown): string[] {
   if (!val) return [];
@@ -42,6 +43,8 @@ export default function ProjectsPage() {
   const [activeSort, setActiveSort] = useState("newest");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState("");
+  const { toggle } = useProjectEngagement(allProjects, setAllProjects, currentUserId);
 
   useEffect(() => {
     const handleSidebarHover = (event: Event) => {
@@ -96,6 +99,27 @@ export default function ProjectsPage() {
       }
     );
 
+    const {
+  data: { user },
+} = await supabase.auth.getUser();
+setCurrentUserId(user?.id ?? "");
+
+const projectIds = projectsData.map((p: any) => p.id);
+const mine = async (table: string): Promise<Set<string>> => {
+  if (!user) return new Set();
+  const { data } = await supabase
+    .from(table)
+    .select("project_id")
+    .eq("user_id", user.id)
+    .in("project_id", projectIds);
+  return new Set((data ?? []).map((r: { project_id: string }) => r.project_id));
+};
+const [likedSet, followedSet, savedSet] = await Promise.all([
+  mine("project_likes"),
+  mine("project_follows"),
+  mine("project_bookmarks"),
+]);
+
     const enriched: Project[] = projectsData.map((p: any) => ({
       ...p,
       tech_stack: normArray(p.tech_stack),
@@ -103,9 +127,11 @@ export default function ProjectsPage() {
       target_audience: normArray(p.target_audience),
       founderName: profileMap[p.user_id]?.name ?? "Unknown Founder",
       founderAvatar: profileMap[p.user_id]?.avatar ?? "",
-      likes: 0,
-      followers: 0,
-      rating: 0,
+      likes: p.likes_count ?? 0,
+      followers: p.followers_count ?? 0,
+      isLiked: likedSet.has(p.id),
+      isFollowing: followedSet.has(p.id),
+      isBookmarked: savedSet.has(p.id),
     }));
 
     setAllProjects(enriched);
@@ -161,11 +187,18 @@ export default function ProjectsPage() {
           new Date(a.created_at).getTime()
       );
     }
+    if (activeSort === "liked") {
+      result.sort((a, b) => b.likes - a.likes);
+   }
 
     return result;
   }, [allProjects, filters, search, activeSort]);
 
   const hasActiveFilters = Object.values(filters).some(Boolean);
+
+  const openProject = selectedProject
+  ? allProjects.find((p) => p.id === selectedProject.id) ?? null
+  : null;
 
   return (
 <main
@@ -296,9 +329,11 @@ isSidebarHovered ? "md:ml-14" : "md:ml-[-0rem]"
                 {displayed.map((project) => (
                   <div key={project.id} className="min-w-0">
                     <ProjectCard
-                      project={project}
-                      onViewMore={setSelectedProject}
-                    />
+  project={project}
+  onViewMore={setSelectedProject}
+  onToggleLike={(id) => toggle(id, "like")}
+  onToggleBookmark={(id) => toggle(id, "bookmark")}
+/>
                   </div>
                 ))}
               </div>
@@ -309,9 +344,12 @@ isSidebarHovered ? "md:ml-14" : "md:ml-[-0rem]"
 
         {/* Project details drawer */}
         <ProjectDrawer
-          project={selectedProject}
-          onClose={() => setSelectedProject(null)}
-        />
+  project={selectedProject}
+  onClose={() => setSelectedProject(null)}
+  onToggleLike={(id) => toggle(id, "like")}
+  onToggleFollow={(id) => toggle(id, "follow")}
+  onToggleBookmark={(id) => toggle(id, "bookmark")}
+/>
 
       </div>
     </main>

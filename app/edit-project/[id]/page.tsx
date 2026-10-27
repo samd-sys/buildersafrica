@@ -255,10 +255,11 @@ export default function EditProjectPage() {
     );
   }
 
+  
   return (
     <div
-      className={`h-135 w-220 mt-6 rounded-3xl border border-white/30 flex items-center justify-center px-4 py-10 overflow-hidden bg-[#09090B] transition-all duration-500 ease-in-out ${
-        isSidebarHovered ? "ml-16" : "ml-0"
+      className={`relative mx-auto mt-3 flex min-h-[calc(100dvh-1.5rem)] w-full items-center justify-center overflow-hidden rounded-2xl border border-white/30 bg-[#09090B] px-3 py-5 transition-all duration-500 ease-in-out sm:mt-4 sm:min-h-[calc(100dvh-2rem)] sm:rounded-3xl sm:px-5 sm:py-8 md:px-8 lg:mt-6 lg:min-h-[540px] lg:ml-[6.25rem] lg:w-[calc(100%-6.25rem)] lg:px-4 lg:py-10 ${
+        isSidebarHovered ? "lg:scale-[1.005]" : "scale-100"
       }`}
       style={{
         transform: isSidebarHovered ? "scale(1.005)" : "scale(1)",
@@ -266,17 +267,18 @@ export default function EditProjectPage() {
         transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
-      <div className="w-full max-w-2xl space-y-6">
+      <div className="w-full min-w-0 max-w-2xl space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex w-full min-w-0 items-center justify-between gap-3">
           <button
             onClick={() => router.push("/my-projects")}
-            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors"
+            className="flex shrink-0 items-center gap-1.5 text-sm text-gray-400 transition-colors hover:text-white"
           >
             <ChevronLeft size={16} />
             My Projects
           </button>
-          <span className="text-xs text-gray-600 font-medium uppercase tracking-wider">
+
+          <span className="min-w-0 truncate text-right text-[10px] font-medium uppercase tracking-wider text-gray-600 sm:text-xs">
             Editing: {data.title || "Untitled"}
           </span>
         </div>
@@ -285,18 +287,18 @@ export default function EditProjectPage() {
         <ProgressBar currentStep={step} totalSteps={TOTAL_STEPS} />
 
         {/* Step card */}
-        <div className="max-h-[55vh] overflow-y-auto overflow-x-hidden rounded-4xl border border-[#1F1F23] bg-[#0F0F11] p-8 shadow-2xl shadow-black/40">
+        <div className="max-h-[65dvh] min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl border border-[#1F1F23] bg-[#0F0F11] p-4 shadow-2xl shadow-black/40 sm:max-h-[65dvh] sm:rounded-3xl sm:p-6 lg:max-h-[55vh] lg:rounded-4xl lg:p-8">
           <StepWrapper step={step}>
             {renderStep()}
           </StepWrapper>
         </div>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between">
+        <div className="flex w-full items-center justify-between gap-3">
           <button
             onClick={handleBack}
             disabled={step === 1}
-            className="flex items-center gap-2 rounded-xl border border-[#1F1F23] bg-[#0F0F11] px-5 py-2.5 text-sm font-medium text-gray-400 transition-colors hover:text-white hover:border-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex shrink-0 items-center gap-2 rounded-xl border border-[#1F1F23] bg-[#0F0F11] px-4 py-2.5 text-sm font-medium text-gray-400 transition-colors hover:border-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-30 sm:px-5"
           >
             <ChevronLeft size={16} />
             Back
@@ -306,10 +308,13 @@ export default function EditProjectPage() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 rounded-xl bg-[#00AFEF]/40 px-7 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#00AFEF]/20 transition-all hover:bg-[#00AFEF]/80 active:scale-[0.98] disabled:opacity-60"
+              className="flex min-w-0 items-center justify-center gap-2 rounded-xl bg-[#00AFEF]/40 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#00AFEF]/20 transition-all hover:bg-[#00AFEF]/80 active:scale-[0.98] disabled:opacity-60 sm:px-7"
             >
               {isSaving ? (
-                <><Loader2 size={14} className="animate-spin" /> Saving...</>
+                <>
+                  <Loader2 size={14} className="shrink-0 animate-spin" />
+                  Saving...
+                </>
               ) : (
                 "Save Changes ✓"
               )}
@@ -317,7 +322,7 @@ export default function EditProjectPage() {
           ) : (
             <button
               onClick={handleNext}
-              className="rounded-xl bg-[#00AFEF]/40 px-7 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#00AFEF]/80 active:scale-[0.98]"
+              className="shrink-0 rounded-xl bg-[#00AFEF]/40 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#00AFEF]/80 active:scale-[0.98] sm:px-7"
             >
               Next →
             </button>

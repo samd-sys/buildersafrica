@@ -1,9 +1,11 @@
-import { Heart, Users, Star, User } from "lucide-react";
+import { Heart, Users, Star, User, Bookmark } from "lucide-react";
 import { Project, STAGE_META } from "../types";
 
 type Props = {
   project: Project;
   onViewMore: (project: Project) => void;
+  onToggleLike: (id: string) => void;
+  onToggleBookmark: (id: string) => void;
 };
 
 // Deterministic gradient per project id so each card gets a consistent
@@ -24,8 +26,7 @@ function gradientForId(id: string) {
   return GRADIENTS[index];
 }
 
-export default function ProjectCard({ project, onViewMore }: Props) {
-  const stage = STAGE_META[project.stage] ?? null;
+export default function ProjectCard({ project, onViewMore, onToggleLike, onToggleBookmark }: Props) {  const stage = STAGE_META[project.stage] ?? null;
   const gradient = gradientForId(project.id);
 
   return (
@@ -113,20 +114,39 @@ export default function ProjectCard({ project, onViewMore }: Props) {
           </div>
 
           {/* Engagement metrics */}
-          <div className="flex items-center gap-3 text-xs text-gray-500">
-            <span className="flex items-center gap-1">
-              <Heart size={12} />
-              {project.likes}
-            </span>
-            <span className="flex items-center gap-1">
-              <Users size={12} />
-              {project.followers}
-            </span>
-            <span className="flex items-center gap-1">
-              <Star size={12} />
-              {project.rating.toFixed(1)}
-            </span>
-          </div>
+<div className="flex items-center gap-3 text-xs text-gray-500">
+  <button
+    type="button"
+    onClick={() => onToggleLike(project.id)}
+    aria-pressed={!!project.isLiked}
+    aria-label={project.isLiked ? "Unlike project" : "Like project"}
+    className={`flex items-center gap-1 transition-colors ${
+      project.isLiked ? "text-[#00AFEF]" : "hover:text-white"
+    }`}
+  >
+    <Heart size={12} className={project.isLiked ? "fill-current" : ""} />
+    {project.likes}
+  </button>
+  <span className="flex items-center gap-1">
+    <Users size={12} />
+    {project.followers}
+  </span>
+  <span className="flex items-center gap-1">
+    <Star size={12} />
+    {(project.rating ?? 0).toFixed(1)}
+  </span>
+  <button
+    type="button"
+    onClick={() => onToggleBookmark(project.id)}
+    aria-pressed={!!project.isBookmarked}
+    aria-label={project.isBookmarked ? "Remove bookmark" : "Bookmark project"}
+    className={`transition-colors ${
+      project.isBookmarked ? "text-[#00AFEF]" : "hover:text-white"
+    }`}
+  >
+    <Bookmark size={12} className={project.isBookmarked ? "fill-current" : ""} />
+  </button>
+</div>
         </div>
       </div>
 
