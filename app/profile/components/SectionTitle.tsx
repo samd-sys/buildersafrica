@@ -1,3 +1,4 @@
+
 import React from "react";
 
 type SectionTitleProps = {
@@ -11,12 +12,12 @@ export default function SectionTitle({
 }: SectionTitleProps) {
   return (
     <div className="mb-4 px-1">
-      <h3 className="text-sm font-semibold text-white/40 tracking-wider uppercase">
+      <h3 className="text-sm font-semibold text-muted tracking-wider uppercase">
         {title}
       </h3>
 
       {description && (
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-muted">
           {description}
         </p>
       )}

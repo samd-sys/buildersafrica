@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -12,24 +13,25 @@ export default function SkillTagInput({
   setSkills,
 }: SkillTagInputProps) {
   const [input, setInput] = useState("");
+
   const addSkill = () => {
-  const trimmed = input.trim();
+    const trimmed = input.trim();
 
-  if (!trimmed) return;
+    if (!trimmed) return;
 
-  if (skills.includes(trimmed)) {
+    if (skills.includes(trimmed)) {
+      setInput("");
+      return;
+    }
+
+    setSkills([...skills, trimmed]);
     setInput("");
-    return;
-  }
+  };
 
-  setSkills([...skills, trimmed]);
-  setInput("");
-};
-const removeSkill = (skillToRemove: string) => {
-  setSkills(
-    skills.filter((skill) => skill !== skillToRemove)
-  );
-};
+  const removeSkill = (skillToRemove: string) => {
+    setSkills(skills.filter((skill) => skill !== skillToRemove));
+  };
+
   return (
     <div className="space-y-4">
       {/* Input */}
@@ -38,27 +40,29 @@ const removeSkill = (skillToRemove: string) => {
         placeholder="Type a skill..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addSkill();
-    }
-  }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            addSkill();
+          }
+        }}
         className="
           w-full
           rounded-xl
           border
-          border-white/10
-          bg-white/5
+          border-border
+          bg-surface-secondary
           px-4
           py-3
-          text-white
-          placeholder:text-white/30
+          text-foreground
+          placeholder:text-muted/60
           outline-none
           transition-all
           duration-200
-          hover:border-white/20
-          focus:border-cyan-400
+          hover:border-[#00AFEF]/40
+          focus:border-[#00AFEF]
+          focus:ring-1
+          focus:ring-[#00AFEF]/20
         "
       />
 
@@ -66,39 +70,40 @@ const removeSkill = (skillToRemove: string) => {
       <div className="flex flex-wrap gap-3">
         {skills.map((skill, index) => (
           <div
-            key={index}
-className="
-  flex
-  items-center
-  gap-2
-  rounded-full
-  border
-  border-cyan-500/30
-  bg-cyan-500/10
-  px-4
-  py-2
-  text-sm
-  font-medium
-  text-cyan-100
-  transition-all
-  duration-200
-  hover:border-cyan-400
-  hover:bg-cyan-500/20
-"   
+            key={`${skill}-${index}`}
+            className="
+              flex
+              items-center
+              gap-2
+              rounded-full
+              border
+              border-[#00AFEF]/30
+              bg-[#00AFEF]/10
+              px-4
+              py-2
+              text-sm
+              font-medium
+              text-[#00AFEF]
+              transition-all
+              duration-200
+              hover:border-[#00AFEF]/60
+              hover:bg-[#00AFEF]/15
+            "
           >
             <span>{skill}</span>
 
             <button
               type="button"
               onClick={() => removeSkill(skill)}
+              aria-label={`Remove ${skill}`}
               className="
-              text-cyan-300
-              transition-colors
-              hover:text-red-400
+                text-[#00AFEF]/70
+                transition-colors
+                hover:text-red-400
               "
-          >
-            ✕
-           </button>
+            >
+              ✕
+            </button>
           </div>
         ))}
       </div>

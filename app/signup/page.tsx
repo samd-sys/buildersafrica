@@ -34,7 +34,7 @@ function getPasswordStrength(password: string): {
   width: string;
   color: string;
 } {
-  if (password.length === 0) {
+  if (!password.length) {
     return { level: "weak", label: "", width: "0%", color: "" };
   }
 
@@ -73,7 +73,6 @@ const MIN_PASS_LENGTH = 12;
 
 function validate(form: FormState): FormErrors {
   const errors: FormErrors = {};
-
   const name = form.name.trim();
 
   if (!name || name.length < 2) {
@@ -228,15 +227,15 @@ export default function Signup() {
   // Email confirmation screen
   if (success) {
     return (
-      <main className="flex min-h-screen w-full items-center justify-center overflow-x-clip bg-black px-4 py-8 text-white sm:px-6">
-        <section className="w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] p-5 shadow-2xl backdrop-blur-xl sm:rounded-3xl sm:p-8 md:p-10">
+      <main className="flex min-h-screen w-full items-center justify-center overflow-x-clip bg-background px-4 py-8 text-foreground sm:px-6">
+        <section className="w-full max-w-xl rounded-2xl border border-border bg-surface p-5 shadow-2xl sm:rounded-3xl sm:p-8 md:p-10">
           <h1 className="text-2xl font-semibold sm:text-3xl">
             Confirm your email
           </h1>
 
-          <p className="mt-4 break-words text-sm leading-6 text-slate-400 sm:text-base">
+          <p className="mt-4 break-words text-sm leading-6 text-muted sm:text-base">
             We sent a confirmation link to{" "}
-            <span className="break-all text-white">
+            <span className="break-all font-medium text-foreground">
               {form.email.trim().toLowerCase()}
             </span>
           </p>
@@ -244,7 +243,7 @@ export default function Signup() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link
               href="/login"
-              className="inline-flex min-h-12 items-center justify-center rounded-full border border-cyan-400/30 px-6 py-3 text-center text-cyan-200 transition-colors hover:bg-cyan-400/10"
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-border px-6 py-3 text-center text-[#00AFEF] transition-colors hover:bg-surface-secondary"
             >
               Go to Login
             </Link>
@@ -262,9 +261,9 @@ export default function Signup() {
   }
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col overflow-x-clip bg-black text-white">
+    <main className="relative flex min-h-screen w-full flex-col overflow-x-clip bg-background text-foreground">
       {/* Header */}
-      <nav className="relative z-10 w-full border-b border-white/10 bg-white/[0.03] backdrop-blur-xl">
+      <nav className="relative z-10 w-full border-b border-border bg-surface/90 backdrop-blur-xl">
         <div className="mx-auto flex min-h-[76px] w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
           <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg sm:h-14 sm:w-14">
@@ -277,11 +276,11 @@ export default function Signup() {
 
             <div className="min-w-0">
               <p className="whitespace-nowrap text-lg font-bold leading-tight sm:text-2xl">
-                <span className="text-white">Builders</span>
+                <span className="text-foreground">Builders</span>
                 <span className="text-[#00AFEF]">Africa</span>
               </p>
 
-              <p className="mt-1 text-xs text-white/40 sm:text-sm">
+              <p className="mt-1 text-xs text-muted sm:text-sm">
                 Developers Platform
               </p>
             </div>
@@ -289,7 +288,7 @@ export default function Signup() {
 
           <Link
             href="/"
-            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white/70 transition-colors hover:border-[#00AFEF]/40 hover:text-white sm:px-5 sm:text-base"
+            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-secondary px-3 py-2 text-sm font-medium text-muted transition-colors hover:border-[#00AFEF]/40 hover:text-foreground sm:px-5 sm:text-base"
           >
             <span className="sm:hidden">← Back</span>
             <span className="hidden sm:inline">← Return</span>
@@ -305,17 +304,17 @@ export default function Signup() {
           className="pointer-events-none absolute inset-0 opacity-20"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)",
+              "linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)",
             backgroundSize: "40px 40px",
           }}
         />
 
-        <section className="relative z-10 w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] p-4 shadow-2xl backdrop-blur-2xl sm:rounded-3xl sm:p-7 md:p-9">
+        <section className="relative z-10 w-full max-w-xl rounded-2xl border border-border bg-surface p-4 shadow-2xl sm:rounded-3xl sm:p-7 md:p-9">
           <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">
             Sign up to BuildersAfrica
           </h1>
 
-          <p className="mt-2 text-sm leading-6 text-white/45 sm:text-base">
+          <p className="mt-2 text-sm leading-6 text-muted sm:text-base">
             Create your account and start building with Africa&apos;s tech
             community.
           </p>
@@ -323,7 +322,7 @@ export default function Signup() {
           {errors.general && (
             <div
               role="alert"
-              className="mt-5 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm leading-6 text-red-200 sm:p-4"
+              className="mt-5 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm leading-6 text-red-500 sm:p-4"
             >
               {errors.general}
             </div>
@@ -338,7 +337,7 @@ export default function Signup() {
             <div className="space-y-1.5">
               <label
                 htmlFor="signup-name"
-                className="block text-sm font-medium text-white/75"
+                className="block text-sm font-medium text-foreground"
               >
                 Full name
               </label>
@@ -356,13 +355,13 @@ export default function Signup() {
                 required
                 aria-invalid={!!errors.name}
                 aria-describedby={errors.name ? "signup-name-error" : undefined}
-                className={`block min-h-12 w-full min-w-0 rounded-xl border bg-transparent px-4 py-3 text-base text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#00AFEF] ${
-                  errors.name ? "border-red-500/60" : "border-white/15"
+                className={`block min-h-12 w-full min-w-0 rounded-xl border bg-background px-4 py-3 text-base text-foreground outline-none transition-colors placeholder:text-muted focus:border-[#00AFEF] ${
+                  errors.name ? "border-red-500/60" : "border-border"
                 }`}
               />
 
               {errors.name && (
-                <p id="signup-name-error" className="px-1 text-xs text-red-400">
+                <p id="signup-name-error" className="px-1 text-xs text-red-500">
                   {errors.name}
                 </p>
               )}
@@ -372,7 +371,7 @@ export default function Signup() {
             <div className="space-y-1.5">
               <label
                 htmlFor="signup-email"
-                className="block text-sm font-medium text-white/75"
+                className="block text-sm font-medium text-foreground"
               >
                 Email address
               </label>
@@ -392,13 +391,13 @@ export default function Signup() {
                 required
                 aria-invalid={!!errors.email}
                 aria-describedby={errors.email ? "signup-email-error" : undefined}
-                className={`block min-h-12 w-full min-w-0 rounded-xl border bg-transparent px-4 py-3 text-base text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#00AFEF] ${
-                  errors.email ? "border-red-500/60" : "border-white/15"
+                className={`block min-h-12 w-full min-w-0 rounded-xl border bg-background px-4 py-3 text-base text-foreground outline-none transition-colors placeholder:text-muted focus:border-[#00AFEF] ${
+                  errors.email ? "border-red-500/60" : "border-border"
                 }`}
               />
 
               {errors.email && (
-                <p id="signup-email-error" className="px-1 text-xs text-red-400">
+                <p id="signup-email-error" className="px-1 text-xs text-red-500">
                   {errors.email}
                 </p>
               )}
@@ -408,7 +407,7 @@ export default function Signup() {
             <div className="space-y-1.5">
               <label
                 htmlFor="signup-password"
-                className="block text-sm font-medium text-white/75"
+                className="block text-sm font-medium text-foreground"
               >
                 Password
               </label>
@@ -428,15 +427,15 @@ export default function Signup() {
                   aria-describedby={
                     errors.password ? "signup-password-error" : undefined
                   }
-                  className={`block min-h-12 w-full min-w-0 rounded-xl border bg-transparent py-3 pl-4 pr-12 text-base text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#00AFEF] ${
-                    errors.password ? "border-red-500/60" : "border-white/15"
+                  className={`block min-h-12 w-full min-w-0 rounded-xl border bg-background py-3 pl-4 pr-12 text-base text-foreground outline-none transition-colors placeholder:text-muted focus:border-[#00AFEF] ${
+                    errors.password ? "border-red-500/60" : "border-border"
                   }`}
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-white/50 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF]"
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF]"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
@@ -446,7 +445,7 @@ export default function Signup() {
               {/* Password strength */}
               {form.password.length > 0 && (
                 <div className="space-y-1.5 px-1 pt-1">
-                  <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
+                  <div className="h-1 w-full overflow-hidden rounded-full bg-surface-secondary">
                     <div
                       className={`h-full rounded-full transition-all duration-300 ${strength.color}`}
                       style={{ width: strength.width }}
@@ -456,11 +455,11 @@ export default function Signup() {
                   <p
                     className={`text-xs font-medium ${
                       strength.level === "weak"
-                        ? "text-red-400"
+                        ? "text-red-500"
                         : strength.level === "fair"
-                          ? "text-orange-400"
+                          ? "text-orange-500"
                           : strength.level === "good"
-                            ? "text-yellow-400"
+                            ? "text-yellow-500"
                             : "text-[#00AFEF]"
                     }`}
                   >
@@ -472,7 +471,7 @@ export default function Signup() {
               {errors.password && (
                 <p
                   id="signup-password-error"
-                  className="px-1 text-xs text-red-400"
+                  className="px-1 text-xs text-red-500"
                 >
                   {errors.password}
                 </p>
@@ -483,7 +482,7 @@ export default function Signup() {
             <div className="space-y-1.5">
               <label
                 htmlFor="signup-confirm-password"
-                className="block text-sm font-medium text-white/75"
+                className="block text-sm font-medium text-foreground"
               >
                 Confirm password
               </label>
@@ -505,17 +504,17 @@ export default function Signup() {
                       ? "signup-confirm-password-error"
                       : undefined
                   }
-                  className={`block min-h-12 w-full min-w-0 rounded-xl border bg-transparent py-3 pl-4 pr-12 text-base text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#00AFEF] ${
+                  className={`block min-h-12 w-full min-w-0 rounded-xl border bg-background py-3 pl-4 pr-12 text-base text-foreground outline-none transition-colors placeholder:text-muted focus:border-[#00AFEF] ${
                     errors.confirmPassword
                       ? "border-red-500/60"
-                      : "border-white/15"
+                      : "border-border"
                   }`}
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword((v) => !v)}
-                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-white/50 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF]"
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF]"
                   aria-label={
                     showConfirmPassword ? "Hide password" : "Show password"
                   }
@@ -531,7 +530,7 @@ export default function Signup() {
               {errors.confirmPassword && (
                 <p
                   id="signup-confirm-password-error"
-                  className="px-1 text-xs text-red-400"
+                  className="px-1 text-xs text-red-500"
                 >
                   {errors.confirmPassword}
                 </p>
@@ -545,12 +544,12 @@ export default function Signup() {
                   siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
                   onSuccess={handleCaptchaSuccess}
                   onExpire={handleCaptchaExpire}
-                  options={{ theme: "dark" }}
+                  options={{ theme: "auto" }}
                 />
               </div>
 
               {errors.captcha && (
-                <p role="alert" className="text-center text-xs text-red-400">
+                <p role="alert" className="text-center text-xs text-red-500">
                   {errors.captcha}
                 </p>
               )}
@@ -566,7 +565,7 @@ export default function Signup() {
             </button>
 
             {/* Login link */}
-            <p className="pt-1 text-center text-sm leading-6 text-white/45 sm:text-base">
+            <p className="pt-1 text-center text-sm leading-6 text-muted sm:text-base">
               Already have an account?{" "}
               <Link
                 href="/login"

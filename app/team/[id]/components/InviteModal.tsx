@@ -1,3 +1,6 @@
+
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Search, User, Loader2, Check } from "lucide-react";
@@ -35,129 +38,276 @@ export default function InviteModal({
   const [isSearching, setIsSearching] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [sentTo, setSentTo] = useState<string[]>([]);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchRequestRef = useRef(0);
 
-  useEffect(() => { setIsMounted(true); }, []);
+  // Ensure portal is rendered only on the client.
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
+  // Reset modal state when closed.
   useEffect(() => {
     if (!isOpen) {
-      setQuery(""); setResults([]); setSelected(null);
-      setRole("Collaborator"); setMessage(""); setSentTo([]);
+      setQuery("");
+      setResults([]);
+      setSelected(null);
+      setRole("Collaborator");
+      setMessage("");
+      setSentTo([]);
+      setIsSearching(false);
+
+      searchRequestRef.current += 1;
+
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
     }
   }, [isOpen]);
 
+  // Close modal when Escape is pressed.
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+    if (!isOpen) return;
 
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", onKey);
+
+    return () => {
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [isOpen, onClose]);
+
+  // Clear pending debounce when component unmounts.
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+
+      searchRequestRef.current += 1;
+    };
+  }, []);
+
+  // Search available builders.
   const searchBuilders = async (q: string) => {
-    if (!q.trim()) { setResults([]); return; }
+    const requestId = ++searchRequestRef.current;
+
+    if (!q.trim()) {
+      setResults([]);
+      setIsSearching(false);
+      return;
+    }
+
     setIsSearching(true);
 
-    const { data } = await supabase
-      .from("profiles")
-      .select("user_id, full_name, avatar_url, professional_title")
-      .ilike("full_name", `%${q}%`)
-      .not("user_id", "in", `(${existingMemberIds.join(",") || "00000000-0000-0000-0000-000000000000"})`)
-      .limit(6);
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url, professional_title")
+        .ilike("full_name", `%${q.trim()}%`)
+        .not(
+          "user_id",
+          "in",
+          `(${existingMemberIds.join(",") || "00000000-0000-0000-0000-000000000000"})`
+        )
+        .limit(6);
 
-    setResults(data || []);
-    setIsSearching(false);
+      // Ignore outdated search responses.
+      if (requestId !== searchRequestRef.current) return;
+
+      if (error) {
+        console.error("Builder search failed:", error);
+        setResults([]);
+        return;
+      }
+
+      setResults(data || []);
+    } catch (err) {
+      if (requestId === searchRequestRef.current) {
+        console.error("Builder search failed:", err);
+        setResults([]);
+      }
+    } finally {
+      if (requestId === searchRequestRef.current) {
+        setIsSearching(false);
+      }
+    }
   };
 
-  const handleQueryChange = (v: string) => {
-    setQuery(v);
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
     setSelected(null);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => searchBuilders(v), 350);
+    setResults([]);
+
+    searchRequestRef.current += 1;
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    if (!value.trim()) {
+      setIsSearching(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(() => {
+      searchBuilders(value);
+    }, 350);
   };
 
+  // Send invitation notification.
   const handleSendInvite = async () => {
-    if (!selected) return;
+    if (!selected || isSending) return;
+
     setIsSending(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setIsSending(false); return; }
+    try {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("user_id", user.id)
-      .single();
+      if (authError || !user) {
+        alert("Please sign in to send an invitation.");
+        return;
+      }
 
-    const senderName = profile?.full_name || user.email || "The project founder";
-    const personalMsg = message.trim()
-      ? ` Message: "${message.trim()}"`
-      : "";
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", user.id)
+        .single();
 
-    await supabase.from("notifications").insert([{
-      user_id: selected.user_id,
-      title: "Project Invitation",
-      message: `${senderName} has invited you to join their project: ${projectTitle} as ${role}.${personalMsg}`,
-      type: "invite",
-      related_project_id: projectId,
-      sender_id: user.id,
-    }]);
+      if (profileError) {
+        console.error("Failed to retrieve sender profile:", profileError);
+      }
 
-    setSentTo((prev) => [...prev, selected.user_id]);
-    setSelected(null);
-    setQuery("");
-    setResults([]);
-    setMessage("");
-    setIsSending(false);
+      const senderName =
+        profile?.full_name || user.email || "The project founder";
+
+      const personalMsg = message.trim()
+        ? ` Message: "${message.trim()}"`
+        : "";
+
+      const { error } = await supabase.from("notifications").insert([
+        {
+          user_id: selected.user_id,
+          title: "Project Invitation",
+          message: `${senderName} has invited you to join their project: ${projectTitle} as ${role}.${personalMsg}`,
+          type: "invite",
+          related_project_id: projectId,
+          sender_id: user.id,
+        },
+      ]);
+
+      if (error) {
+        console.error("Invitation failed:", error);
+        alert("Unable to send the invitation. Please try again.");
+        return;
+      }
+
+      setSentTo((prev) => [...prev, selected.user_id]);
+      setSelected(null);
+      setQuery("");
+      setResults([]);
+      setMessage("");
+    } catch (err) {
+      console.error("Failed to send invitation:", err);
+      alert("Something went wrong while sending the invitation.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
-  if (!isMounted) return null;
+  if (!isMounted || !isOpen) return null;
 
   return createPortal(
     <>
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className={`fixed inset-0 z-40 bg-black/70 backdrop-blur-sm transition-opacity duration-200 ${
-          isOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
+        aria-hidden="true"
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-200"
       />
 
       {/* Modal */}
       <div
-        className={`fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-[#1F1F23] bg-[#0F0F11] shadow-2xl transition-all duration-200 ${
-          isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
-        }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="invite-modal-title"
+        className="fixed left-1/2 top-1/2 z-50 max-h-[90dvh] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-border bg-surface text-foreground shadow-2xl transition-all duration-200"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#1F1F23] px-6 py-4">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
-            <h2 className="text-sm font-bold text-white">Invite New Member</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Search for a builder and assign them a role.</p>
+            <h2
+              id="invite-modal-title"
+              className="text-sm font-bold text-foreground"
+            >
+              Invite New Member
+            </h2>
+
+            <p className="mt-0.5 text-xs text-muted">
+              Search for a builder and assign them a role.
+            </p>
           </div>
+
           <button
+            type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-white/5 hover:text-white transition-colors"
+            aria-label="Close invitation modal"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF]"
           >
             <X size={16} />
           </button>
         </div>
 
-        <div className="px-6 py-5 space-y-5">
+        <div className="space-y-5 px-6 py-5">
           {/* Search */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-400">Search Builder</label>
+            <label
+              htmlFor="builder-search"
+              className="text-xs font-medium text-muted"
+            >
+              Search Builder
+            </label>
+
             <div className="relative">
-              <div className="flex items-center gap-2 rounded-xl border border-[#1F1F23] bg-[#121215] px-4 py-3 focus-within:border-white/20 transition-colors">
-                <Search size={14} className="text-gray-500 shrink-0" />
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-secondary px-4 py-3 transition-colors focus-within:border-[#00AFEF]">
+                <Search size={14} className="shrink-0 text-muted" />
+
                 <input
+                  id="builder-search"
                   type="text"
                   value={selected ? selected.full_name : query}
                   onChange={(e) => handleQueryChange(e.target.value)}
                   placeholder="Type a name to search builders..."
-                  className="flex-1 bg-transparent text-sm text-white placeholder:text-white/25 outline-none"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
                 />
-                {isSearching && <Loader2 size={14} className="animate-spin text-gray-500" />}
+
+                {isSearching && (
+                  <Loader2
+                    size={14}
+                    className="animate-spin text-muted"
+                  />
+                )}
+
                 {selected && (
-                  <button onClick={() => { setSelected(null); setQuery(""); }} className="text-gray-500 hover:text-white">
+                  <button
+                    type="button"
+                    aria-label="Clear selected builder"
+                    onClick={() => {
+                      setSelected(null);
+                      setQuery("");
+                      setResults([]);
+                    }}
+                    className="text-muted transition-colors hover:text-foreground"
+                  >
                     <X size={14} />
                   </button>
                 )}
@@ -165,26 +315,52 @@ export default function InviteModal({
 
               {/* Dropdown results */}
               {results.length > 0 && !selected && (
-                <div className="absolute top-full left-0 right-0 z-10 mt-1 rounded-xl border border-[#1F1F23] bg-[#0F0F11] shadow-2xl overflow-hidden">
+                <div className="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-xl border border-border bg-surface shadow-2xl">
                   {results.map((r) => (
                     <button
+                      type="button"
                       key={r.user_id}
-                      onClick={() => { setSelected(r); setResults([]); setQuery(""); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.04] transition-colors text-left"
-                    >
-                      <div className="h-8 w-8 rounded-full overflow-hidden border border-[#27272A] bg-[#18181B] flex items-center justify-center shrink-0">
-                        {r.avatar_url
-                          ? <img src={r.avatar_url} alt={r.full_name} className="h-full w-full object-cover" />
-                          : <User size={14} className="text-gray-600" />
+                      onClick={() => {
+                        searchRequestRef.current += 1;
+
+                        setSelected(r);
+                        setResults([]);
+                        setQuery("");
+                        setIsSearching(false);
+
+                        if (debounceRef.current) {
+                          clearTimeout(debounceRef.current);
+                          debounceRef.current = null;
                         }
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-secondary focus-visible:bg-surface-secondary focus-visible:outline-none"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-secondary">
+                        {r.avatar_url ? (
+                          <img
+                            src={r.avatar_url}
+                            alt={r.full_name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <User size={14} className="text-muted" />
+                        )}
                       </div>
+
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{r.full_name}</p>
-                        <p className="text-xs text-gray-500 truncate">{r.professional_title || "Builder"}</p>
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {r.full_name}
+                        </p>
+
+                        <p className="truncate text-xs text-muted">
+                          {r.professional_title || "Builder"}
+                        </p>
                       </div>
+
                       {sentTo.includes(r.user_id) && (
-                        <span className="ml-auto text-[11px] text-emerald-400 flex items-center gap-1">
-                          <Check size={11} /> Invited
+                        <span className="ml-auto flex items-center gap-1 text-[11px] text-emerald-500">
+                          <Check size={11} />
+                          Invited
                         </span>
                       )}
                     </button>
@@ -196,64 +372,101 @@ export default function InviteModal({
 
           {/* Selected builder preview */}
           {selected && (
-            <div className="flex items-center gap-3 rounded-xl border border-white/20 bg-white/20 px-4 py-3">
-              <div className="h-9 w-9 rounded-full overflow-hidden border border-[#27272A] bg-[#18181B] flex items-center justify-center shrink-0">
-                {selected.avatar_url
-                  ? <img src={selected.avatar_url} alt={selected.full_name} className="h-full w-full object-cover" />
-                  : <User size={14} className="text-gray-600" />
-                }
+            <div className="flex items-center gap-3 rounded-xl border border-[#00AFEF]/30 bg-[#00AFEF]/5 px-4 py-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-secondary">
+                {selected.avatar_url ? (
+                  <img
+                    src={selected.avatar_url}
+                    alt={selected.full_name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <User size={14} className="text-muted" />
+                )}
               </div>
-              <div>
-                <p className="text-sm font-semibold text-white">{selected.full_name}</p>
-                <p className="text-xs text-gray-500">{selected.professional_title || "Builder"}</p>
+
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-foreground">
+                  {selected.full_name}
+                </p>
+
+                <p className="truncate text-xs text-muted">
+                  {selected.professional_title || "Builder"}
+                </p>
               </div>
-              <Check size={16} className="ml-auto text-white/20" />
+
+              <Check size={16} className="ml-auto text-[#00AFEF]" />
             </div>
           )}
 
           {/* Role selector */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-400">Role</label>
+            <label
+              htmlFor="invite-role"
+              className="text-xs font-medium text-muted"
+            >
+              Role
+            </label>
+
             <select
+              id="invite-role"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full rounded-xl border border-[#1F1F23] bg-[#121215] px-4 py-3 text-sm text-white outline-none focus:border-white/20 transition-colors"
+              className="w-full rounded-xl border border-border bg-surface-secondary px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-[#00AFEF] focus-visible:ring-2 focus-visible:ring-[#00AFEF]/20"
             >
               {DEFAULT_ROLES.map((r) => (
-                <option key={r} value={r} className="bg-[#121215]">{r}</option>
+                <option
+                  key={r}
+                  value={r}
+                  className="bg-surface text-foreground"
+                >
+                  {r}
+                </option>
               ))}
             </select>
           </div>
 
           {/* Optional message */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-400">
-              Message <span className="text-gray-600">(optional)</span>
+            <label
+              htmlFor="invite-message"
+              className="text-xs font-medium text-muted"
+            >
+              Message{" "}
+              <span className="text-muted">(optional)</span>
             </label>
+
             <textarea
+              id="invite-message"
               rows={3}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="You're invited to join our project!"
-              className="w-full resize-none rounded-xl border border-[#1F1F23] bg-[#121215] px-4 py-3 text-sm text-white placeholder:text-white/25 outline-none focus:border-white/20 transition-colors"
+              className="w-full resize-none rounded-xl border border-border bg-surface-secondary px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-[#00AFEF] focus-visible:ring-2 focus-visible:ring-[#00AFEF]/20"
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-[#1F1F23] px-6 py-4">
+        <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4">
           <button
+            type="button"
             onClick={onClose}
-            className="rounded-xl border border-[#1F1F23] px-4 py-2 text-sm text-gray-400 hover:text-white hover:border-white/10 transition-colors"
+            className="rounded-xl border border-border px-4 py-2 text-sm text-muted transition-colors hover:border-[#00AFEF]/40 hover:bg-surface-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF]"
           >
             Cancel
           </button>
+
           <button
+            type="button"
             onClick={handleSendInvite}
             disabled={!selected || isSending}
-            className="flex items-center gap-2 rounded-xl bg-[#00AFEF] px-5 py-2 text-sm font-semibold text-white hover:bg-[#008FC5]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 rounded-xl bg-[#00AFEF] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#009bd4] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF] focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
           >
-            {isSending ? <Loader2 size={14} className="animate-spin" /> : null}
+            {isSending && (
+              <Loader2 size={14} className="animate-spin" />
+            )}
+
             {isSending ? "Sending..." : "Send Invitation"}
           </button>
         </div>

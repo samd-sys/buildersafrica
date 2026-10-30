@@ -1,3 +1,4 @@
+
 import { useRef, useState } from "react";
 import { Loader2, Upload, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -62,10 +63,10 @@ export default function Step11Logo({ value, onChange }: Props) {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold text-white">
+        <h2 className="text-2xl font-bold text-foreground">
           Add a logo for your project.
         </h2>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted">
           Optional — you can always add this later from your project settings.
         </p>
       </div>
@@ -84,26 +85,32 @@ export default function Step11Logo({ value, onChange }: Props) {
             <img
               src={displayUrl}
               alt="Project logo"
-              className="h-full w-full rounded-2xl object-cover border border-[#1F1F23]"
+              className="h-full w-full rounded-2xl border border-border object-cover"
             />
+
             {isUploading && (
               <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/60">
                 <Loader2 size={20} className="animate-spin text-white" />
               </div>
             )}
+
             {!isUploading && (
               <button
+                type="button"
                 onClick={clear}
-                className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#1F1F23] border border-white/10 text-gray-400 hover:text-red-400 transition-colors"
+                aria-label="Remove project logo"
+                className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-surface-secondary text-muted transition-colors hover:text-red-500"
               >
                 <X size={12} />
               </button>
             )}
           </div>
+
           {!isUploading && (
             <button
+              type="button"
               onClick={() => fileRef.current?.click()}
-              className="text-xs text-[#00AFEF] hover:text-[#00AFEF]/40 transition-colors"
+              className="text-xs text-[#00AFEF] transition-colors hover:text-[#00AFEF]/70"
             >
               Change logo
             </button>
@@ -111,17 +118,19 @@ export default function Step11Logo({ value, onChange }: Props) {
         </div>
       ) : (
         <button
+          type="button"
           onClick={() => fileRef.current?.click()}
-          className="w-full flex flex-col items-center gap-4 rounded-2xl border-2 border-dashed border-[#1F1F23] bg-[#121215] px-6 py-12 transition-colors hover:border-[#00AFEF]/40 hover:bg-purple-50/[0.03]"
+          className="flex w-full flex-col items-center gap-4 rounded-2xl border-2 border-dashed border-border bg-surface-secondary px-6 py-12 transition-colors hover:border-[#00AFEF]/50"
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-[#1F1F23] bg-[#0C0C0E]">
-            <Upload size={22} className="text-gray-500" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-surface">
+            <Upload size={22} className="text-muted" />
           </div>
-          <div className="text-center space-y-1">
-            <p className="text-sm font-medium text-white">
+
+          <div className="space-y-1 text-center">
+            <p className="text-sm font-medium text-foreground">
               Click to upload a logo
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted">
               PNG, JPG, or SVG — max 2MB
             </p>
           </div>
@@ -129,8 +138,10 @@ export default function Step11Logo({ value, onChange }: Props) {
       )}
 
       <button
+        type="button"
         onClick={() => onChange("")}
-        className="text-xs text-gray-500 hover:text-gray-300 transition-colors block mx-auto"
+        disabled={isUploading}
+        className="mx-auto block text-xs text-muted transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
       >
         Skip for now →
       </button>

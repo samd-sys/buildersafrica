@@ -1,3 +1,4 @@
+
 import { TEAM_ROLES } from "../../types/project";
 
 type Props = {
@@ -18,10 +19,10 @@ export default function Step9TeamNeeds({ value, onChange, error }: Props) {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold text-white">
+        <h2 className="text-2xl font-bold text-foreground">
           Who are you currently looking for?
         </h2>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted">
           Select all the roles you need on your team.
         </p>
       </div>
@@ -29,14 +30,17 @@ export default function Step9TeamNeeds({ value, onChange, error }: Props) {
       <div className="flex flex-wrap gap-3">
         {TEAM_ROLES.map((role) => {
           const isSelected = value.includes(role);
+
           return (
             <button
               key={role}
+              type="button"
               onClick={() => toggle(role)}
+              aria-pressed={isSelected}
               className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-150 ${
                 isSelected
-                  ? "border-white/20 bg-[#00AFEF]/40 text-white scale-105"
-                  : "border-[#1F1F23] bg-[#121215] text-gray-400 hover:border-white/10 hover:text-white"
+                  ? "scale-105 border-[#00AFEF] bg-[#00AFEF]/15 text-foreground"
+                  : "border-border bg-surface text-muted hover:border-[#00AFEF]/50 hover:text-foreground"
               }`}
             >
               {role}
@@ -49,7 +53,11 @@ export default function Step9TeamNeeds({ value, onChange, error }: Props) {
           analyses the project description and problem statement and
           calls onChange() with recommended roles. */}
 
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && (
+        <p className="text-xs text-red-500" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

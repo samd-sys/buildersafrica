@@ -1,3 +1,6 @@
+
+"use client";
+
 import { useState } from "react";
 import { Search } from "lucide-react";
 import { TeamMember } from "../types";
@@ -20,33 +23,57 @@ export default function MemberList({
 }: Props) {
   const [search, setSearch] = useState("");
 
+  const normalizedSearch = search.trim().toLowerCase();
+
   const filtered = members.filter(
-    (m) =>
-      m.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-      m.role?.toLowerCase().includes(search.toLowerCase())
+    (member) =>
+      member.full_name?.toLowerCase().includes(normalizedSearch) ||
+      member.role?.toLowerCase().includes(normalizedSearch)
   );
 
   return (
     <div className="space-y-3">
       {/* Search */}
-      <div className="flex items-center gap-3 rounded-xl border border-[#1F1F23] bg-[#121215] px-4 py-2.5 focus-within:border-purple-500/40 transition-colors">
-        <Search size={14} className="text-gray-500 shrink-0" />
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-2.5 transition-colors focus-within:border-[#00AFEF]">
+        <Search size={14} className="shrink-0 text-muted" />
+
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search members..."
-          className="flex-1 bg-transparent text-sm text-white placeholder:text-white/25 outline-none"
+          aria-label="Search team members"
+          className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
         />
+
+        {search && (
+          <button
+            type="button"
+            onClick={() => setSearch("")}
+            aria-label="Clear member search"
+            className="text-xs text-muted transition-colors hover:text-foreground"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       {/* Member rows */}
       <div className="space-y-2">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <p className="text-sm font-semibold text-white">No members found</p>
-            <p className="text-xs text-gray-500">
-              {search ? "Try a different search term." : "Invite your first team member to get started."}
+          <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 py-12 text-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-secondary">
+              <Search size={17} className="text-muted" />
+            </div>
+
+            <p className="text-sm font-semibold text-foreground">
+              No members found
+            </p>
+
+            <p className="text-xs text-muted">
+              {normalizedSearch
+                ? "Try a different search term."
+                : "Invite your first team member to get started."}
             </p>
           </div>
         ) : (

@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import ThemeToggle from "@/components/ThemeToggle";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -40,7 +41,7 @@ export default function Navbar() {
     setMobileOpen(false);
   }, [pathname]);
 
-  // ── Avatar ──────────────────────────────────────────────────────────────
+  // Avatar
   const loadAvatar = async () => {
     const {
       data: { user },
@@ -65,7 +66,7 @@ export default function Navbar() {
     setAvatarUrl(data?.avatar_url || "");
   };
 
-  // ── Notification unread count ───────────────────────────────────────────
+  // Notification unread count
   const loadUnreadCount = async () => {
     const {
       data: { user },
@@ -85,7 +86,7 @@ export default function Navbar() {
     setUnreadCount(count ?? 0);
   };
 
-  // ── DM unread count ─────────────────────────────────────────────────────
+  // DM unread count
   const loadDmUnreadCount = async () => {
     const {
       data: { user },
@@ -119,11 +120,11 @@ export default function Navbar() {
     setDmUnreadCount(count ?? 0);
   };
 
-  // ── Load user data and subscribe to updates ─────────────────────────────
+  // Load user data and subscribe to updates
   useEffect(() => {
-    loadAvatar();
-    loadUnreadCount();
-    loadDmUnreadCount();
+    let notifChannel: ReturnType<typeof supabase.channel> | null = null;
+    let dmChannel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
 
     const handleAvatarUpdated = (
       event: CustomEvent<{ avatarUrl: string }>
@@ -136,11 +137,13 @@ export default function Navbar() {
       handleAvatarUpdated as EventListener
     );
 
-    let notifChannel: ReturnType<typeof supabase.channel> | null = null;
-    let dmChannel: ReturnType<typeof supabase.channel> | null = null;
-    let cancelled = false;
-
     const setupSubscriptions = async () => {
+      await Promise.all([
+        loadAvatar(),
+        loadUnreadCount(),
+        loadDmUnreadCount(),
+      ]);
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -151,25 +154,25 @@ export default function Navbar() {
 
       // Notification badge updates
       notifChannel = supabase
-  .channel("navbar-notifications")
-  .on(
-    "postgres_changes",
-    {
-      event: "*",
-      schema: "public",
-      table: "notifications",
-    },
-    (payload) => {
-      const row = (payload.new ?? payload.old ?? {}) as {
-        user_id?: string;
-      };
+        .channel("navbar-notifications")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "notifications",
+          },
+          (payload) => {
+            const row = (payload.new ?? payload.old ?? {}) as {
+              user_id?: string;
+            };
 
-      if (row.user_id !== userId) return;
+            if (row.user_id !== userId) return;
 
-      loadUnreadCount();
-    }
-  )
-  .subscribe();
+            loadUnreadCount();
+          }
+        )
+        .subscribe();
 
       // Direct message badge updates
       dmChannel = supabase
@@ -215,7 +218,7 @@ export default function Navbar() {
     return null;
   }
 
-  // ── Main navigation items ───────────────────────────────────────────────
+  // Main navigation items
   const navItems = [
     {
       name: "Projects",
@@ -244,7 +247,7 @@ export default function Navbar() {
     },
   ];
 
-  // ── Bottom navigation items ─────────────────────────────────────────────
+  // Bottom navigation items
   const bottomItems = [
     {
       name: "My Projects",
@@ -262,9 +265,9 @@ export default function Navbar() {
 
   return (
     <>
-      {/* ───────────────── DESKTOP SIDEBAR ───────────────── */}
+      {/* DESKTOP SIDEBAR */}
       <aside
-        className="group hidden md:fixed md:left-0 md:top-0 md:z-50 md:flex md:h-screen md:w-20 md:flex-col md:justify-between md:overflow-hidden md:border-r md:border-white/10 md:bg-black/95 md:px-3 md:py-9 md:text-white md:transition-all md:duration-300 md:hover:w-64"
+        className="group hidden md:fixed md:left-0 md:top-0 md:z-50 md:flex md:h-screen md:w-20 md:flex-col md:justify-between md:overflow-hidden md:border-r md:border-border md:bg-sidebar md:px-3 md:py-9 md:text-foreground md:transition-all md:duration-300 md:hover:w-64"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -272,12 +275,12 @@ export default function Navbar() {
         <div>
           {/* Logo */}
           <div className="mb-12 flex items-center gap-4 px-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cyan-500 font-bold">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#00AFEF]/10">
               <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl">
                 <img
                   src="/B8.png"
                   alt="BuildersAfrica Logo"
-                  className="h-14 w-14 object-cover"
+                  className="h-10 w-10 object-contain"
                 />
               </div>
             </div>
@@ -285,7 +288,7 @@ export default function Navbar() {
             <div className="whitespace-nowrap opacity-0 transition-all duration-200 group-hover:opacity-100">
               <h1 className="text-xl font-bold">
                 Builders
-                <span className="text-cyan-400">Africa</span>
+                <span className="text-[#00AFEF]">Africa</span>
               </h1>
             </div>
           </div>
@@ -306,8 +309,8 @@ export default function Navbar() {
                   href={item.href}
                   className={`relative flex items-center gap-4 rounded-xl px-4 py-3 transition-all duration-200 ${
                     isActive
-                      ? "bg-white/10 text-white"
-                      : "text-gray-400 hover:bg-white/10 hover:text-white"
+                      ? "bg-[#00AFEF]/10 text-[#00AFEF]"
+                      : "text-muted hover:bg-surface-secondary hover:text-foreground"
                   }`}
                 >
                   <div className="relative shrink-0">
@@ -342,13 +345,13 @@ export default function Navbar() {
 
                   {/* Expanded sidebar unread counts */}
                   {isMessagesItem && dmUnreadCount > 0 && (
-                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full border border-[#00AFEF]/30 bg-[#00AFEF]/20 px-1.5 text-[10px] font-bold text-[#00AFEF] opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full border border-[#00AFEF]/30 bg-[#00AFEF]/10 px-1.5 text-[10px] font-bold text-[#00AFEF] opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                       {dmUnreadCount > 99 ? "99+" : dmUnreadCount}
                     </span>
                   )}
 
                   {isNotifItem && unreadCount > 0 && (
-                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full border border-[#00AFEF]/30 bg-[#00AFEF]/20 px-1.5 text-[10px] font-bold text-[#00AFEF] opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full border border-[#00AFEF]/30 bg-[#00AFEF]/10 px-1.5 text-[10px] font-bold text-[#00AFEF] opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                       {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
                   )}
@@ -357,7 +360,7 @@ export default function Navbar() {
             })}
           </div>
 
-          <div className="my-4 h-px w-full bg-white/20" />
+          <div className="my-4 h-px w-full bg-border" />
         </div>
 
         {/* Bottom Section */}
@@ -372,8 +375,8 @@ export default function Navbar() {
                 href={item.href}
                 className={`flex items-center gap-4 rounded-xl px-4 py-3 transition-all duration-200 ${
                   isActive
-                    ? "bg-white/10 text-white"
-                    : "text-gray-400 hover:bg-white/10 hover:text-white"
+                    ? "bg-[#00AFEF]/10 text-[#00AFEF]"
+                    : "text-muted hover:bg-surface-secondary hover:text-foreground"
                 }`}
               >
                 <Icon size={22} className="min-w-[22px] shrink-0" />
@@ -384,10 +387,14 @@ export default function Navbar() {
               </Link>
             );
           })}
+
+          <div className="border-t border-border pt-3">
+            <ThemeToggle showLabel={isHovered} />
+          </div>
         </div>
       </aside>
 
-      {/* ───────────────── MOBILE MENU BUTTON ───────────────── */}
+      {/* MOBILE MENU BUTTON */}
       {!mobileOpen && (
         <button
           type="button"
@@ -398,7 +405,6 @@ export default function Navbar() {
         >
           <Menu size={22} />
 
-          {/* Total unread badge */}
           {totalUnreadCount > 0 && (
             <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
               {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
@@ -407,7 +413,7 @@ export default function Navbar() {
         </button>
       )}
 
-      {/* ───────────────── MOBILE SIDEBAR OVERLAY ───────────────── */}
+      {/* MOBILE SIDEBAR OVERLAY */}
       {mobileOpen && (
         <div className="fixed inset-0 z-[70] flex md:hidden">
           {/* Background overlay */}
@@ -419,19 +425,19 @@ export default function Navbar() {
           />
 
           {/* Mobile sidebar */}
-          <nav className="relative z-10 flex h-full w-[260px] max-w-[85vw] flex-col overflow-y-auto border-r border-white/10 bg-[#0C0C0E] p-4 text-white">
+          <nav className="relative z-10 flex h-full w-[260px] max-w-[85vw] flex-col overflow-y-auto border-r border-border bg-sidebar p-4 text-foreground">
             {/* Mobile Header */}
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img
                   src="/B8.png"
                   alt="BuildersAfrica Logo"
-                  className="h-9 w-9 rounded-lg object-cover"
+                  className="h-9 w-9 rounded-lg object-contain"
                 />
 
                 <h2 className="text-lg font-bold">
                   Builders
-                  <span className="text-cyan-400">Africa</span>
+                  <span className="text-[#00AFEF]">Africa</span>
                 </h2>
               </div>
 
@@ -439,7 +445,7 @@ export default function Navbar() {
                 type="button"
                 onClick={() => setMobileOpen(false)}
                 aria-label="Close navigation"
-                className="rounded-lg p-2 text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+                className="rounded-lg p-2 text-muted transition-colors hover:bg-surface-secondary hover:text-foreground"
               >
                 <X size={20} />
               </button>
@@ -452,6 +458,7 @@ export default function Navbar() {
 
                 const isMessages = item.name === "Messages";
                 const isNotif = item.name === "Notifications";
+                const isProfile = item.name === "Profile";
                 const isActive = pathname === item.href;
 
                 return (
@@ -461,11 +468,19 @@ export default function Navbar() {
                     onClick={() => setMobileOpen(false)}
                     className={`flex items-center gap-3 rounded-lg px-3 py-3 transition-colors ${
                       isActive
-                        ? "bg-white/10 text-white"
-                        : "text-white/70 hover:bg-white/5 hover:text-white"
+                        ? "bg-[#00AFEF]/10 text-[#00AFEF]"
+                        : "text-muted hover:bg-surface-secondary hover:text-foreground"
                     }`}
                   >
-                    <Icon size={20} className="shrink-0" />
+                    {isProfile && avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="Your profile"
+                        className="h-5 w-5 shrink-0 rounded-full object-cover"
+                      />
+                    ) : (
+                      <Icon size={20} className="shrink-0" />
+                    )}
 
                     <span className="flex-1 text-sm">{item.name}</span>
 
@@ -488,7 +503,7 @@ export default function Navbar() {
             </div>
 
             {/* Divider */}
-            <div className="my-5 h-px w-full bg-white/10" />
+            <div className="my-5 h-px w-full bg-border" />
 
             {/* My Projects and New Project */}
             <div className="space-y-2">
@@ -503,8 +518,8 @@ export default function Navbar() {
                     onClick={() => setMobileOpen(false)}
                     className={`flex items-center gap-3 rounded-lg px-3 py-3 transition-colors ${
                       isActive
-                        ? "bg-white/10 text-white"
-                        : "text-white/70 hover:bg-white/5 hover:text-white"
+                        ? "bg-[#00AFEF]/10 text-[#00AFEF]"
+                        : "text-muted hover:bg-surface-secondary hover:text-foreground"
                     }`}
                   >
                     <Icon size={20} className="shrink-0" />
@@ -513,6 +528,11 @@ export default function Navbar() {
                   </Link>
                 );
               })}
+
+              {/* Mobile Theme Toggle */}
+              <div className="mt-4 border-t border-border pt-3">
+                <ThemeToggle showLabel />
+              </div>
             </div>
           </nav>
         </div>

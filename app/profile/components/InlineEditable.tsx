@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 
 type InlineEditableProps = {
@@ -31,8 +32,8 @@ export default function InlineEditable({
   const [draft, setDraft] = useState(value);
   const fieldRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
-  // If the value changes from elsewhere (e.g. profile reload) while
-  // this field isn't being actively edited, keep the draft in sync.
+  // Keep the draft synchronized when the external value changes
+  // while the field isn't actively being edited.
   useEffect(() => {
     if (!isEditing) setDraft(value);
   }, [value, isEditing]);
@@ -47,6 +48,7 @@ export default function InlineEditable({
   const commit = () => {
     setIsEditing(false);
     const trimmed = draft.trim();
+
     if (trimmed !== value) {
       onSave(trimmed);
     }
@@ -60,12 +62,12 @@ export default function InlineEditable({
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    // Enter commits single-line fields; in a textarea Enter should
-    // still add a new line, so only Escape applies there.
+    // Enter commits single-line fields; textarea Enter adds a new line.
     if (e.key === "Enter" && as === "input") {
       e.preventDefault();
       commit();
     }
+
     if (e.key === "Escape") {
       e.preventDefault();
       cancel();
@@ -73,7 +75,7 @@ export default function InlineEditable({
   };
 
   if (isEditing) {
-    const sharedClassName = `w-full bg-[#18181B] border border-[#3B82F6]/50 rounded-lg px-2.5 py-1.5 text-white outline-none focus:border-[#3B82F6] transition-colors ${inputClassName}`;
+    const sharedClassName = `w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-foreground outline-none focus:border-[#00AFEF] focus:ring-1 focus:ring-[#00AFEF]/30 transition-colors placeholder:text-muted ${inputClassName}`;
 
     if (as === "textarea") {
       return (
@@ -116,8 +118,9 @@ export default function InlineEditable({
         }
       }}
       title="Click to edit"
-      className={`cursor-pointer rounded-md -mx-1 px-1 transition-colors hover:bg-white/[0.06] ${
-        !value ? "text-white/30 italic" : ""
+      aria-label={`Edit ${value || placeholder}`}
+      className={`cursor-pointer rounded-md -mx-1 px-1 transition-colors hover:bg-surface-secondary ${
+        !value ? "text-muted italic" : "text-foreground"
       } ${displayClassName}`}
     >
       {value || placeholder}

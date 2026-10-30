@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { TECH_SUGGESTIONS } from "../../types/project";
 
@@ -26,6 +27,7 @@ export default function Step10TechStack({ value, onChange, error }: Props) {
       e.preventDefault();
       addTag(input);
     }
+
     if (e.key === "Backspace" && !input && value.length > 0) {
       onChange(value.slice(0, -1));
     }
@@ -40,37 +42,51 @@ export default function Step10TechStack({ value, onChange, error }: Props) {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold text-white">
+        <h2 className="text-2xl font-bold text-foreground">
           What technologies will you use?
         </h2>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted">
           Type a technology and press Enter, or pick from suggestions below.
         </p>
       </div>
 
       <div className="space-y-3">
-        <div className="min-h-[56px] rounded-xl border border-white/5 bg-[#0D0D0D]/60 px-4 py-3 flex flex-wrap gap-2 items-center hover:border-white/10 focus-within:border-purple-500/60 transition-colors">
+        <div
+          className={`flex min-h-[56px] flex-wrap items-center gap-2 rounded-xl border bg-surface-secondary px-4 py-3 transition-colors ${
+            error
+              ? "border-red-500/60 focus-within:border-red-500"
+              : "border-border hover:border-[#00AFEF]/50 focus-within:border-[#00AFEF]"
+          }`}
+        >
           {value.map((tag) => (
             <span
               key={tag}
-              className="flex items-center gap-1.5 rounded-lg border border-white/20 bg-[#00AFEF]/20 px-3 py-1 text-xs font-medium text-white"
+              className="flex items-center gap-1.5 rounded-lg border border-[#00AFEF]/40 bg-[#00AFEF]/10 px-3 py-1 text-xs font-medium text-foreground"
             >
               {tag}
               <button
+                type="button"
                 onClick={() => removeTag(tag)}
-                className="text-[#00AFEF] hover:text-red-400 transition-colors"
+                aria-label={`Remove ${tag}`}
+                className="text-[#00AFEF] transition-colors hover:text-red-500"
               >
                 ✕
               </button>
             </span>
           ))}
+
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={value.length === 0 ? "e.g. React, Node.js, Python..." : "Add more..."}
-            className="flex-1 min-w-[120px] bg-transparent text-sm text-white placeholder:text-white/25 outline-none"
+            placeholder={
+              value.length === 0
+                ? "e.g. React, Node.js, Python..."
+                : "Add more..."
+            }
+            aria-invalid={!!error}
+            className="min-w-[120px] flex-1 bg-transparent text-sm text-foreground placeholder:text-muted/50 outline-none"
           />
         </div>
 
@@ -79,8 +95,9 @@ export default function Step10TechStack({ value, onChange, error }: Props) {
             {suggestions.map((s) => (
               <button
                 key={s}
+                type="button"
                 onClick={() => addTag(s)}
-                className="rounded-lg border border-[#1F1F23] bg-[#121215] px-3 py-1.5 text-xs text-gray-400 hover:border-white/10 hover:text-white transition-colors"
+                className="rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-muted transition-colors hover:border-[#00AFEF]/50 hover:text-foreground"
               >
                 + {s}
               </button>
@@ -89,7 +106,11 @@ export default function Step10TechStack({ value, onChange, error }: Props) {
         )}
       </div>
 
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && (
+        <p className="text-xs text-red-500" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

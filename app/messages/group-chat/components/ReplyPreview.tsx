@@ -1,3 +1,6 @@
+
+"use client";
+
 import { X, CornerUpLeft } from "lucide-react";
 
 type Props =
@@ -20,30 +23,36 @@ export default function ReplyPreview(props: Props) {
   if (props.mode === "bubble") {
     return (
       <div
-        className={`mb-1 rounded-xl border-l-2 border-[#00AFEF] px-3 py-2 text-xs max-w-full ${
+        className={`mb-1 max-w-full rounded-xl border-l-2 border-[#00AFEF] px-3 py-2 text-xs ${
           props.isMine
-            ? "bg-white/10"
-            : "bg-[#0F0F11] border border-[#1F1F23]"
+            ? "bg-surface-secondary"
+            : "border border-border bg-surface"
         }`}
       >
-        <p className="font-semibold text-[#00AFEF] truncate">{props.senderName}</p>
-        <p className="text-gray-400 truncate mt-0.5">{props.content}</p>
+        <p className="truncate font-semibold text-[#00AFEF]">
+          {props.senderName}
+        </p>
+        <p className="mt-0.5 truncate text-muted">{props.content}</p>
       </div>
     );
   }
 
   return (
     <div className="flex items-center gap-3 rounded-xl border border-[#00AFEF]/20 bg-[#00AFEF]/5 px-4 py-2.5">
-      <CornerUpLeft size={14} className="text-[#00AFEF] shrink-0" />
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-[#00AFEF] truncate">
+      <CornerUpLeft size={14} className="shrink-0 text-[#00AFEF]" />
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-semibold text-[#00AFEF]">
           Replying to {props.senderName}
         </p>
-        <p className="text-xs text-gray-400 truncate">{props.content}</p>
+        <p className="truncate text-xs text-muted">{props.content}</p>
       </div>
+
       <button
+        type="button"
         onClick={props.onCancel}
-        className="text-gray-500 hover:text-white transition-colors shrink-0"
+        aria-label="Cancel reply"
+        className="shrink-0 text-muted transition-colors hover:text-foreground"
       >
         <X size={14} />
       </button>

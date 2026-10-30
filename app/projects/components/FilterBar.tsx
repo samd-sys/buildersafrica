@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -95,8 +96,8 @@ function Dropdown({
         aria-expanded={open}
         className={`flex items-center gap-1.5 whitespace-nowrap rounded-xl border px-3 py-2 text-xs font-medium transition-all sm:px-5 md:px-9 ${
           isActive
-            ? "border-white/30 bg-gray text-white"
-            : "border-white/30 bg-[#121215] text-gray-400 hover:border-white/20 hover:text-white"
+            ? "border-[#00AFEF]/40 bg-[#00AFEF]/10 text-[#00AFEF]"
+            : "border-border bg-surface text-muted hover:border-[#00AFEF]/40 hover:text-foreground"
         }`}
       >
         {label}
@@ -121,7 +122,7 @@ function Dropdown({
               maxWidth: "calc(100vw - 24px)",
               zIndex: 9999,
             }}
-            className="overflow-hidden rounded-xl border border-[#1F1F23] bg-[#0F0F11] shadow-2xl shadow-black/60"
+            className="overflow-hidden rounded-xl border border-border bg-surface text-foreground shadow-2xl"
           >
             {children(() => setOpen(false))}
           </div>,
@@ -161,14 +162,14 @@ function OptionList({
             }}
             className={`flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
               isSelected
-                ? "bg-white/10 text-white"
-                : "text-gray-400 hover:bg-white/[0.04] hover:text-white"
+                ? "bg-[#00AFEF]/10 text-[#00AFEF]"
+                : "text-muted hover:bg-surface-secondary hover:text-foreground"
             }`}
           >
             {emoji && <span>{emoji}</span>}
             {opt}
             {isSelected && (
-              <span className="ml-auto text-white">✓</span>
+              <span className="ml-auto text-[#00AFEF]">✓</span>
             )}
           </button>
         );
@@ -297,7 +298,7 @@ export default function FilterBar({
                     handleLocationChange(event.target.value)
                   }
                   placeholder="Type your preferred location"
-                  className="w-full rounded-lg border border-[#1F1F23] bg-[#121215] px-3 py-2 text-xs text-white outline-none transition-colors placeholder:text-white/30 focus:border-white/30"
+                  className="w-full rounded-lg border border-border bg-surface-secondary px-3 py-2 text-xs text-foreground outline-none transition-colors placeholder:text-muted focus:border-[#00AFEF]"
                 />
 
                 {locationInput && (
@@ -356,13 +357,13 @@ export default function FilterBar({
             value={activeSort}
             onChange={(event) => onSortChange(event.target.value)}
             aria-label="Sort projects"
-            className="w-[100px] appearance-none rounded-xl border border-[#1F1F23] bg-[#121215] py-2 pl-3 pr-6 text-xs font-medium text-gray-300 outline-none transition-colors hover:border-white/10 sm:w-auto sm:pl-4 sm:pr-8"
+            className="w-[100px] appearance-none rounded-xl border border-border bg-surface py-2 pl-3 pr-6 text-xs font-medium text-foreground outline-none transition-colors hover:border-[#00AFEF]/40 sm:w-auto sm:pl-4 sm:pr-8"
           >
             {SORT_OPTIONS.map((option) => (
               <option
                 key={option.value}
                 value={option.value}
-                className="bg-[#121215]"
+                className="bg-surface text-foreground"
               >
                 {option.label}
               </option>
@@ -384,7 +385,7 @@ export default function FilterBar({
           {activeChips.map((chip) => (
             <span
               key={chip.key}
-              className="flex items-center gap-1.5 rounded-full border border-white/30 bg-gray px-3 py-1 text-[11px] font-medium text-white/70"
+              className="flex items-center gap-1.5 rounded-full border border-border bg-surface-secondary px-3 py-1 text-[11px] font-medium text-foreground"
             >
               <span className="text-[10px] text-gray-500">
                 {chip.label}:

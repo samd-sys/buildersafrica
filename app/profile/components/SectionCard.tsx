@@ -1,3 +1,4 @@
+
 import React from "react";
 
 type SectionCardProps = {
@@ -16,12 +17,12 @@ export default function SectionCard({
         overflow-hidden
         rounded-2xl
         border
-        border-[#1F1F23]
-        bg-[#121215]
+        border-border
+        bg-surface
         p-5
         transition-all
         duration-200
-        hover:border-white/10
+        hover:border-[#00AFEF]/40
         ${className}
       `}
     >

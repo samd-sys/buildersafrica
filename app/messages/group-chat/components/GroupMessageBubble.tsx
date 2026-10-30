@@ -1,3 +1,6 @@
+
+"use client";
+
 import { useState } from "react";
 import { Trash2, CornerUpLeft, X } from "lucide-react";
 import { GroupMessage, formatGroupTime } from "../groupTypes";
@@ -14,6 +17,7 @@ type Props = {
 // Renders message content with @mentions highlighted in #00AFEF
 function MessageContent({ content }: { content: string }) {
   const parts = content.split(/(@[\w\s]+?)(?=\s|$|@)/g);
+
   return (
     <>
       {parts.map((part, i) =>
@@ -36,26 +40,33 @@ export default function GroupMessageBubble({
   onDelete,
   onReply,
 }: Props) {
-  const [hovering,  setHovering]  = useState(false);
-  const [lightbox,  setLightbox]  = useState(false);
+  const [hovering, setHovering] = useState(false);
+  const [lightbox, setLightbox] = useState(false);
+
   const isDeleted = !!m.deleted_at;
-  const isImage   = m.attachment_type?.startsWith("image/");
-  const hasReply  = !!(m as any).reply_to_content;
+  const isImage = m.attachment_type?.startsWith("image/");
+  const hasReply = !!(m as any).reply_to_content;
 
   return (
     <div
-      className={`flex items-end gap-2 ${isMine ? "flex-row-reverse" : "flex-row"}`}
+      className={`flex items-end gap-2 ${
+        isMine ? "flex-row-reverse" : "flex-row"
+      }`}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
       {/* Avatar */}
       <div className={`w-7 shrink-0 ${isMine ? "hidden" : ""}`}>
         {showSender ? (
-          <div className="h-7 w-7 rounded-full overflow-hidden border border-[#27272A] bg-[#18181B] flex items-center justify-center">
+          <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-secondary">
             {m.senderAvatar ? (
-              <img src={m.senderAvatar} alt={m.senderName} className="h-full w-full object-cover" />
+              <img
+                src={m.senderAvatar}
+                alt={m.senderName}
+                className="h-full w-full object-cover"
+              />
             ) : (
-              <span className="text-[9px] font-bold text-gray-500">
+              <span className="text-[9px] font-bold text-muted">
                 {m.senderName?.slice(0, 2).toUpperCase()}
               </span>
             )}
@@ -65,21 +76,30 @@ export default function GroupMessageBubble({
 
       {/* Action buttons on hover */}
       {hovering && !isDeleted && (
-        <div className={`flex items-center gap-1 mb-1 ${isMine ? "flex-row" : "flex-row-reverse"}`}>
+        <div
+          className={`mb-1 flex items-center gap-1 ${
+            isMine ? "flex-row" : "flex-row-reverse"
+          }`}
+        >
           {/* Reply */}
           <button
+            type="button"
             onClick={() => onReply(m)}
-            className="flex h-6 w-6 items-center justify-center rounded-md text-gray-600 hover:text-[#00AFEF] transition-colors"
             title="Reply"
+            aria-label="Reply to message"
+            className="flex h-6 w-6 items-center justify-center rounded-md text-muted transition-colors hover:text-[#00AFEF]"
           >
             <CornerUpLeft size={13} />
           </button>
+
           {/* Delete (own messages only) */}
           {isMine && (
             <button
+              type="button"
               onClick={() => onDelete(m.id)}
-              className="flex h-6 w-6 items-center justify-center rounded-md text-gray-600 hover:text-red-400 transition-colors"
               title="Delete"
+              aria-label="Delete message"
+              className="flex h-6 w-6 items-center justify-center rounded-md text-muted transition-colors hover:text-red-500"
             >
               <Trash2 size={13} />
             </button>
@@ -87,10 +107,14 @@ export default function GroupMessageBubble({
         </div>
       )}
 
-      <div className={`flex flex-col gap-1 max-w-[70%] ${isMine ? "items-end" : "items-start"}`}>
+      <div
+        className={`flex max-w-[70%] flex-col gap-1 ${
+          isMine ? "items-end" : "items-start"
+        }`}
+      >
         {/* Sender name */}
         {!isMine && showSender && (
-          <p className="text-[11px] font-semibold text-[#00AFEF] px-1">
+          <p className="px-1 text-[11px] font-semibold text-[#00AFEF]">
             {m.senderName}
           </p>
         )}
@@ -109,29 +133,35 @@ export default function GroupMessageBubble({
         <div
           className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
             isDeleted
-              ? "border border-[#1F1F23] bg-transparent text-gray-600 italic text-xs"
+              ? "border border-border bg-transparent text-muted italic text-xs"
               : isMine
               ? "bg-[#00AFEF] text-slate-950"
-              : "bg-[#1F1F23] text-white"
+              : "bg-surface-secondary text-foreground"
           } ${isMine ? "rounded-br-sm" : "rounded-bl-sm"}`}
         >
           {isDeleted ? (
             "This message was deleted"
           ) : (
             <>
-              {m.content && <p><MessageContent content={m.content} /></p>}
-              {m.attachment_url && (
-                isImage ? (
+              {m.content && (
+                <p>
+                  <MessageContent content={m.content} />
+                </p>
+              )}
+
+              {m.attachment_url &&
+                (isImage ? (
                   <>
                     <img
                       src={m.attachment_url}
                       alt="attachment"
-                      className="mt-1 max-w-[220px] rounded-xl object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      className="mt-1 max-w-[220px] cursor-pointer rounded-xl object-cover transition-opacity hover:opacity-90"
                       onClick={() => setLightbox(true)}
                     />
+
                     {lightbox && (
                       <div
-                        className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
                         onClick={() => setLightbox(false)}
                       >
                         <img
@@ -140,9 +170,12 @@ export default function GroupMessageBubble({
                           className="max-h-full max-w-full rounded-xl object-contain"
                           onClick={(e) => e.stopPropagation()}
                         />
+
                         <button
+                          type="button"
                           onClick={() => setLightbox(false)}
-                          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+                          aria-label="Close image preview"
+                          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
                         >
                           <X size={16} />
                         </button>
@@ -158,15 +191,14 @@ export default function GroupMessageBubble({
                   >
                     📎 Download attachment
                   </a>
-                )
-              )}
+                ))}
             </>
           )}
         </div>
 
         {/* Timestamp */}
-        <span className="text-[10px] text-gray-600 px-1">
-          {formatGroupTime(m.created_at || m.created_at)}
+        <span className="px-1 text-[10px] text-muted">
+          {formatGroupTime(m.created_at)}
         </span>
       </div>
     </div>

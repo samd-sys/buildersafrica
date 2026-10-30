@@ -1,3 +1,6 @@
+
+"use client";
+
 import { useEffect, useRef } from "react";
 import { User } from "lucide-react";
 
@@ -33,6 +36,7 @@ export default function MentionPicker({
         onClose();
       }
     };
+
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [onClose]);
@@ -42,29 +46,39 @@ export default function MentionPicker({
   return (
     <div
       ref={ref}
-      className="absolute bottom-full left-0 mb-2 z-30 w-56 rounded-xl border border-[#1F1F23] bg-[#0F0F11] shadow-2xl overflow-hidden"
+      className="absolute bottom-full left-0 z-30 mb-2 w-56 overflow-hidden rounded-xl border border-border bg-surface shadow-2xl"
     >
-      <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-gray-600 border-b border-[#1F1F23]">
+      <p className="border-b border-border px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted">
         Mention a member
       </p>
+
       <div className="max-h-48 overflow-y-auto py-1">
         {filtered.map((m) => (
           <button
             key={m.user_id}
+            type="button"
+            aria-label={`Mention ${m.full_name}`}
             onMouseDown={(e) => {
-              e.preventDefault(); // prevent input blur
+              e.preventDefault(); // Prevent input blur
               onSelect(m);
             }}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-white/[0.04] transition-colors text-left"
+            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-surface-secondary"
           >
-            <div className="h-7 w-7 rounded-full overflow-hidden border border-[#27272A] bg-[#18181B] flex items-center justify-center shrink-0">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-secondary">
               {m.avatar_url ? (
-                <img src={m.avatar_url} alt={m.full_name} className="h-full w-full object-cover" />
+                <img
+                  src={m.avatar_url}
+                  alt={m.full_name}
+                  className="h-full w-full object-cover"
+                />
               ) : (
-                <User size={12} className="text-gray-600" />
+                <User size={12} className="text-muted" />
               )}
             </div>
-            <span className="text-sm text-white truncate">{m.full_name}</span>
+
+            <span className="truncate text-sm text-foreground">
+              {m.full_name}
+            </span>
           </button>
         ))}
       </div>

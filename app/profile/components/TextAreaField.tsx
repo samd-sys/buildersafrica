@@ -1,3 +1,4 @@
+
 type TextAreaFieldProps = {
   label: string;
   placeholder?: string;
@@ -15,7 +16,7 @@ export default function TextAreaField({
 }: TextAreaFieldProps) {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-white/80">
+      <label className="block text-sm font-medium text-foreground">
         {label}
       </label>
 
@@ -26,21 +27,21 @@ export default function TextAreaField({
         onChange={onChange}
         className="
           w-full
+          resize-none
           rounded-xl
-          border border-white/10
-          bg-white/5
+          border border-border
+          bg-surface-secondary
           px-4
           py-3
-          text-white
-          placeholder:text-white/30
+          text-foreground
+          placeholder:text-muted/60
           outline-none
           transition-all
           duration-200
-          hover:border-white/20
-          focus:border-cyan-400
+          hover:border-[#00AFEF]/40
+          focus:border-[#00AFEF]
           focus:ring-2
-          focus:ring-cyan-400/20
-          resize-none
+          focus:ring-[#00AFEF]/20
         "
       />
     </div>

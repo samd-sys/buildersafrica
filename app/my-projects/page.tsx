@@ -155,10 +155,10 @@ function ProjectCard({
   };
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-[#1F1F23] bg-[#121215] transition-all duration-200 hover:border-[#00AFEF]/20">
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-all duration-200 hover:border-[#00AFEF]/40">
       {/* Banner */}
       <div
-        className={`relative h-36 bg-gradient-to-br ${gradient} overflow-hidden`}
+        className={`relative h-36 overflow-hidden bg-gradient-to-br ${gradient}`}
       >
         {project.logo_url ? (
           <img
@@ -168,7 +168,7 @@ function ProjectCard({
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="select-none text-5xl font-black tracking-tighter text-white/10">
+            <span className="select-none text-5xl font-black tracking-tighter text-white/30">
               {project.title.slice(0, 2).toUpperCase()}
             </span>
           </div>
@@ -192,16 +192,16 @@ function ProjectCard({
       {/* Content */}
       <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
         <div className="space-y-1">
-          <h3 className="break-words text-lg font-bold leading-tight text-white">
+          <h3 className="break-words text-lg font-bold leading-tight text-foreground">
             {project.title}
           </h3>
 
-          <p className="line-clamp-2 text-xs leading-relaxed text-gray-400">
+          <p className="line-clamp-2 text-xs leading-relaxed text-muted">
             {project.description || "No description provided."}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
           {project.location && (
             <span className="flex items-center gap-1 break-words">
               <MapPin size={11} className="shrink-0" />
@@ -229,7 +229,7 @@ function ProjectCard({
             ))}
 
             {techStack.length > 3 && (
-              <span className="rounded-full border border-[#1F1F23] px-2.5 py-0.5 text-[11px] text-gray-500">
+              <span className="rounded-full border border-border px-2.5 py-0.5 text-[11px] text-muted">
                 +{techStack.length - 3}
               </span>
             )}
@@ -238,7 +238,7 @@ function ProjectCard({
       </div>
 
       {/* Action buttons */}
-      <div className="border-t border-[#1F1F23] px-3 py-3 sm:px-5">
+      <div className="border-t border-border px-3 py-3 sm:px-5">
         {confirmDelete ? (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="flex items-center gap-1.5 text-xs text-red-400">
@@ -248,13 +248,15 @@ function ProjectCard({
 
             <div className="flex items-center justify-end gap-2 sm:ml-auto">
               <button
+                type="button"
                 onClick={() => setConfirmDelete(false)}
-                className="rounded-lg border border-[#1F1F23] px-3 py-1.5 text-xs text-gray-400 transition-colors hover:text-white"
+                className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted transition-colors hover:text-foreground"
               >
                 Cancel
               </button>
 
               <button
+                type="button"
                 onClick={handleDelete}
                 disabled={isDeleting}
                 className="flex items-center gap-1.5 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-60"
@@ -272,23 +274,26 @@ function ProjectCard({
         ) : (
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => router.push(`/edit-project/${project.id}`)}
-              className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#1F1F23] bg-[#0F0F11] py-2 text-xs font-medium text-gray-300 transition-colors hover:border-[#00AFEF]/30 hover:text-[#00AFEF]"
+              className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-secondary py-2 text-xs font-medium text-foreground transition-colors hover:border-[#00AFEF]/40 hover:text-[#00AFEF]"
             >
               <Pencil size={12} className="shrink-0" />
               Edit
             </button>
 
             <button
+              type="button"
               onClick={() => router.push(`/team/${project.id}`)}
-              className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#1F1F23] bg-[#0F0F11] py-2 text-xs font-medium text-gray-300 transition-colors hover:border-[#00AFEF]/30 hover:text-[#00AFEF]"
+              className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-secondary py-2 text-xs font-medium text-foreground transition-colors hover:border-[#00AFEF]/40 hover:text-[#00AFEF]"
             >
               Team
             </button>
 
             <button
+              type="button"
               onClick={() => setConfirmDelete(true)}
-              className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#1F1F23] bg-[#0F0F11] py-2 text-xs font-medium text-gray-400 transition-colors hover:border-red-500/20 hover:text-red-400"
+              className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-secondary py-2 text-xs font-medium text-muted transition-colors hover:border-red-500/30 hover:text-red-400"
             >
               <Trash2 size={12} className="shrink-0" />
               Delete
@@ -327,9 +332,9 @@ function ApplicationCard({ app }: { app: Application }) {
   const StatusIcon = config.icon;
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-[#1F1F23] bg-[#121215] px-3 py-4 transition-all hover:border-[#00AFEF]/20 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
+    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface px-3 py-4 transition-all hover:border-[#00AFEF]/40 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
       {/* Project logo */}
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#1F1F23] bg-[#0F0F11]">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-surface-secondary">
         {app.project_logo ? (
           <img
             src={app.project_logo}
@@ -337,7 +342,7 @@ function ApplicationCard({ app }: { app: Application }) {
             className="h-full w-full object-cover"
           />
         ) : (
-          <span className="text-sm font-black text-white/20">
+          <span className="text-sm font-black text-muted">
             {app.project_title.slice(0, 2).toUpperCase()}
           </span>
         )}
@@ -345,18 +350,18 @@ function ApplicationCard({ app }: { app: Application }) {
 
       {/* Info */}
       <div className="min-w-0 flex-1 space-y-1">
-        <p className="break-words text-sm font-semibold text-white">
+        <p className="break-words text-sm font-semibold text-foreground">
           {app.project_title}
         </p>
 
-        <div className="flex min-w-0 items-center gap-1.5 text-xs text-gray-500">
+        <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
           <Briefcase size={11} className="shrink-0" />
           <span className="break-words text-[#00AFEF]">
             {app.position_title}
           </span>
         </div>
 
-        <p className="text-[11px] text-gray-600">
+        <p className="text-[11px] text-muted">
           Applied {formatDate(app.created_at)}
         </p>
       </div>
@@ -372,6 +377,7 @@ function ApplicationCard({ app }: { app: Application }) {
 
         {app.status === "accepted" && (
           <button
+            type="button"
             onClick={() => router.push(`/team/${app.project_id}`)}
             className="flex shrink-0 items-center gap-1.5 rounded-xl border border-[#00AFEF]/20 bg-[#00AFEF]/5 px-2.5 py-1.5 text-xs font-semibold text-[#00AFEF] transition-colors hover:bg-[#00AFEF]/10 sm:px-3"
           >
@@ -506,7 +512,7 @@ export default function MyProjectsPage() {
 
   return (
     <div
-      className={`min-h-screen overflow-x-hidden bg-[#09090B] text-white transition-all duration-500 ease-in-out ${
+      className={`min-h-screen overflow-x-hidden bg-background text-foreground transition-all duration-500 ease-in-out ${
         isSidebarHovered ? "ml-0 md:ml-16" : "ml-0"
       }`}
       style={{
@@ -516,28 +522,30 @@ export default function MyProjectsPage() {
       }}
     >
       <div className="mx-auto w-full max-w-7xl px-3 py-5 sm:px-4 sm:py-8 lg:px-6 lg:py-10">
-        <div className="rounded-2xl border border-white/20 bg-[#0F0F11]/60 p-3 sm:p-5">
+        <div className="rounded-2xl border border-border bg-surface-secondary/60 p-3 sm:p-5">
           <div className="space-y-6 sm:space-y-8">
             {/* Header card */}
-            <div className="flex flex-col gap-5 rounded-2xl border border-[#1F1F23] bg-[#0F0F11] px-4 py-5 sm:px-6 sm:py-6 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:px-8 lg:py-8">
+            <div className="flex flex-col gap-5 rounded-2xl border border-border bg-surface px-4 py-5 sm:px-6 sm:py-6 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:px-8 lg:py-8">
               <div className="min-w-0 space-y-1.5">
-                <h1 className="text-2xl font-bold text-white sm:text-3xl">
+                <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
                   My Projects
                 </h1>
 
-                <p className="max-w-xl text-sm text-gray-400">
+                <p className="max-w-xl text-sm text-muted">
                   Manage your created projects and track your applications.
                 </p>
               </div>
 
               {/* Tab buttons */}
-              <div className="flex w-full min-w-0 items-center gap-1 rounded-xl border border-[#1F1F23] bg-[#121215] p-1 sm:w-auto sm:gap-2">
+              <div className="flex w-full min-w-0 items-center gap-1 rounded-xl border border-border bg-surface-secondary p-1 sm:w-auto sm:gap-2">
                 <button
+                  type="button"
                   onClick={() => setActiveTab("projects")}
+                  aria-pressed={activeTab === "projects"}
                   className={`flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[11px] font-semibold transition-all sm:flex-none sm:gap-2 sm:px-4 sm:text-xs ${
                     activeTab === "projects"
-                      ? "bg-[#1F1F23] text-white"
-                      : "text-gray-500 hover:text-gray-300"
+                      ? "bg-surface text-foreground shadow-sm"
+                      : "text-muted hover:text-foreground"
                   }`}
                 >
                   <FolderOpen size={13} className="shrink-0" />
@@ -548,7 +556,7 @@ export default function MyProjectsPage() {
                       className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
                         activeTab === "projects"
                           ? "bg-[#00AFEF]/20 text-[#00AFEF]"
-                          : "bg-white/5 text-gray-600"
+                          : "bg-surface text-muted"
                       }`}
                     >
                       {projects.length}
@@ -557,11 +565,13 @@ export default function MyProjectsPage() {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => setActiveTab("applications")}
+                  aria-pressed={activeTab === "applications"}
                   className={`flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[11px] font-semibold transition-all sm:flex-none sm:gap-2 sm:px-4 sm:text-xs ${
                     activeTab === "applications"
-                      ? "bg-[#1F1F23] text-white"
-                      : "text-gray-500 hover:text-gray-300"
+                      ? "bg-surface text-foreground shadow-sm"
+                      : "text-muted hover:text-foreground"
                   }`}
                 >
                   <Briefcase size={13} className="shrink-0" />
@@ -572,7 +582,7 @@ export default function MyProjectsPage() {
                       className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
                         activeTab === "applications"
                           ? "bg-[#00AFEF]/20 text-[#00AFEF]"
-                          : "bg-white/5 text-gray-600"
+                          : "bg-surface text-muted"
                       }`}
                     >
                       {applications.length}
@@ -594,16 +604,16 @@ export default function MyProjectsPage() {
                   </div>
                 ) : projects.length === 0 ? (
                   <div className="flex flex-col items-center justify-center gap-5 py-20 text-center sm:py-28">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-[#1F1F23] bg-[#0F0F11]">
-                      <FolderOpen size={36} className="text-gray-700" />
+                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-surface">
+                      <FolderOpen size={36} className="text-muted" />
                     </div>
 
                     <div className="space-y-2">
-                      <p className="text-xl font-bold text-white">
+                      <p className="text-xl font-bold text-foreground">
                         No projects yet
                       </p>
 
-                      <p className="max-w-xs text-sm text-gray-500">
+                      <p className="max-w-xs text-sm text-muted">
                         You haven't created any projects yet. Use the sidebar
                         to start a new one.
                       </p>
@@ -635,16 +645,16 @@ export default function MyProjectsPage() {
                   </div>
                 ) : applications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center gap-5 py-20 text-center sm:py-28">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-[#1F1F23] bg-[#0F0F11]">
-                      <Briefcase size={36} className="text-gray-700" />
+                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-surface">
+                      <Briefcase size={36} className="text-muted" />
                     </div>
 
                     <div className="space-y-2">
-                      <p className="text-xl font-bold text-white">
+                      <p className="text-xl font-bold text-foreground">
                         No applications yet
                       </p>
 
-                      <p className="max-w-xs text-sm text-gray-500">
+                      <p className="max-w-xs text-sm text-muted">
                         You haven't applied to any projects yet. Browse projects
                         and apply for open positions.
                       </p>
@@ -661,18 +671,18 @@ export default function MyProjectsPage() {
                   <div className="space-y-6">
                     {/* Summary stats */}
                     <div className="grid w-full max-w-xs grid-cols-2 gap-3 sm:gap-4">
-                      <div className="rounded-xl border border-[#1F1F23] bg-[#121215] px-3 py-3 text-center sm:px-4">
+                      <div className="rounded-xl border border-border bg-surface px-3 py-3 text-center sm:px-4">
                         <p className="text-lg font-bold text-yellow-400">
                           {pendingCount}
                         </p>
-                        <p className="text-[11px] text-gray-500">Pending</p>
+                        <p className="text-[11px] text-muted">Pending</p>
                       </div>
 
-                      <div className="rounded-xl border border-[#1F1F23] bg-[#121215] px-3 py-3 text-center sm:px-4">
+                      <div className="rounded-xl border border-border bg-surface px-3 py-3 text-center sm:px-4">
                         <p className="text-lg font-bold text-emerald-400">
                           {acceptedCount}
                         </p>
-                        <p className="text-[11px] text-gray-500">Accepted</p>
+                        <p className="text-[11px] text-muted">Accepted</p>
                       </div>
                     </div>
 

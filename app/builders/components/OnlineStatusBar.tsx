@@ -1,3 +1,4 @@
+
 type Props = {
   count: number;
 };
@@ -12,13 +13,14 @@ type Props = {
  */
 export default function OnlineStatusBar({ count }: Props) {
   return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5">
+    <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-secondary px-4 py-1.5 transition-colors">
       <span className="relative flex h-2.5 w-2.5">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
         <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
       </span>
-      <span className="text-xs font-medium text-gray-300">
-        <span className="text-white font-semibold">{count}</span> online
+
+      <span className="text-xs font-medium text-muted">
+        <span className="font-semibold text-foreground">{count}</span> online
       </span>
     </div>
   );

@@ -75,19 +75,20 @@ export default function NewProjectPage() {
 
   // Sidebar animation
   useEffect(() => {
-    const handleSidebarHover = (event: CustomEvent) => {
-      setIsSidebarHovered(event.detail.isHovered);
+    const handleSidebarHover = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      setIsSidebarHovered(customEvent.detail.isHovered);
     };
 
     window.addEventListener(
       "sidebarHover",
-      handleSidebarHover as EventListener
+      handleSidebarHover
     );
 
     return () =>
       window.removeEventListener(
         "sidebarHover",
-        handleSidebarHover as EventListener
+        handleSidebarHover
       );
   }, []);
 
@@ -117,6 +118,8 @@ export default function NewProjectPage() {
   };
 
   const handleCreate = async () => {
+    if (isSaving) return;
+
     setIsSaving(true);
 
     try {
@@ -175,7 +178,9 @@ export default function NewProjectPage() {
       }
     } catch (err) {
       console.error("Failed to create project:", err);
-      alert("Something went wrong while creating your project. Please try again.");
+      alert(
+        "Something went wrong while creating your project. Please try again."
+      );
     } finally {
       setIsSaving(false);
     }
@@ -195,7 +200,7 @@ export default function NewProjectPage() {
 
   return (
     <div
-      className={`relative mx-auto mt-3 flex min-h-[calc(100dvh-1.5rem)] w-full items-center justify-center overflow-hidden rounded-2xl border border-white/20 bg-cover bg-center bg-no-repeat px-3 py-5 transition-all duration-500 ease-in-out sm:mt-4 sm:min-h-[calc(100dvh-2rem)] sm:rounded-3xl sm:px-5 sm:py-8 md:px-8 lg:mt-6 lg:min-h-[540px] lg:ml-[6.25rem] lg:w-[calc(100%-6.25rem)] lg:px-4 lg:py-10 ${
+      className={`relative mx-auto mt-3 flex min-h-[calc(100dvh-1.5rem)] w-full items-center justify-center overflow-hidden rounded-2xl border border-border bg-cover bg-center bg-no-repeat px-3 py-5 transition-all duration-500 ease-in-out sm:mt-4 sm:min-h-[calc(100dvh-2rem)] sm:rounded-3xl sm:px-5 sm:py-8 md:px-8 lg:mt-6 lg:min-h-[540px] lg:ml-[6.25rem] lg:w-[calc(100%-6.25rem)] lg:px-4 lg:py-10 ${
         isSidebarHovered ? "lg:scale-[1.005]" : "scale-100"
       }`}
       style={{
@@ -214,7 +219,7 @@ export default function NewProjectPage() {
         )}
 
         {/* Step card */}
-        <div className="max-h-[70dvh] min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl border border-[#1F1F23] bg-[#0F0F11] p-4 shadow-2xl shadow-black/40 sm:max-h-[75dvh] sm:rounded-3xl sm:p-6 lg:rounded-4xl lg:p-8">
+        <div className="max-h-[70dvh] min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl border border-border bg-surface p-4 shadow-2xl shadow-black/10 sm:max-h-[75dvh] sm:rounded-3xl sm:p-6 lg:rounded-4xl lg:p-8">
           <StepWrapper step={step}>
             {isSuccess ? (
               <SuccessScreen
@@ -295,12 +300,13 @@ export default function NewProjectPage() {
         </div>
 
         {/* Bottom navigation */}
-        {showNav && !isSuccess && (
+        {showNav && (
           <div className="flex w-full items-center justify-between gap-3">
             <button
+              type="button"
               onClick={handleBack}
-              disabled={isFirstStep}
-              className="flex shrink-0 items-center gap-2 rounded-xl border border-[#1F1F23] bg-[#0F0F11] px-4 py-2.5 text-sm font-medium text-gray-400 transition-colors hover:border-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-30 sm:px-5"
+              disabled={isFirstStep || isSaving}
+              className="flex shrink-0 items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-medium text-muted transition-colors hover:border-[#00AFEF]/40 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 sm:px-5"
             >
               <ChevronLeft size={16} />
               Back
@@ -308,9 +314,10 @@ export default function NewProjectPage() {
 
             {isLastStep ? (
               <button
+                type="button"
                 onClick={handleCreate}
                 disabled={isSaving}
-                className="flex min-w-0 items-center justify-center gap-2 rounded-xl bg-[#00AFEF]/40 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#00AFEF]/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:px-7"
+                className="flex min-w-0 items-center justify-center gap-2 rounded-xl bg-[#00AFEF] px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#009bd4] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:px-7"
               >
                 {isSaving ? (
                   <>
@@ -323,8 +330,9 @@ export default function NewProjectPage() {
               </button>
             ) : (
               <button
+                type="button"
                 onClick={handleNext}
-                className="shrink-0 rounded-xl bg-[#00AFEF]/50 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#00AFEF]/30 active:scale-[0.98] sm:px-7"
+                className="shrink-0 rounded-xl bg-[#00AFEF] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#009bd4] active:scale-[0.98] sm:px-7"
               >
                 Next →
               </button>

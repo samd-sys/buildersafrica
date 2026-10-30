@@ -1,3 +1,4 @@
+
 import { STAGE_OPTIONS } from "../../types/project";
 
 type Props = {
@@ -10,10 +11,10 @@ export default function Step8Stage({ value, onChange, error }: Props) {
   return (
     <div className="h-85 space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold text-white">
+        <h2 className="text-2xl font-bold text-foreground">
           Where is your project currently?
         </h2>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted">
           Be honest — every great product starts somewhere.
         </p>
       </div>
@@ -21,36 +22,55 @@ export default function Step8Stage({ value, onChange, error }: Props) {
       <div className="space-y-3">
         {STAGE_OPTIONS.map((stage, index) => {
           const isSelected = value === stage.label;
+
           return (
             <button
               key={stage.label}
+              type="button"
               onClick={() => onChange(stage.label)}
-              className={`w-120 flex items-center gap-3 rounded-xl border p-2 text-left transition-all duration-150 ${
+              aria-pressed={isSelected}
+              className={`flex w-full items-center gap-3 rounded-xl border p-2 text-left transition-all duration-150 ${
                 isSelected
-                  ? "border-white/20 bg-blue-500/10"
-                  : "border-[#1F1F23] bg-[#121215] hover:border-white/10"
+                  ? "border-[#00AFEF] bg-[#00AFEF]/10"
+                  : "border-border bg-surface hover:border-[#00AFEF]/50"
               }`}
             >
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-xs font-bold text-gray-600 w-4">
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="w-4 text-xs font-bold text-muted">
                   {index + 1}
                 </span>
               </div>
+
               <div>
-                <p className={`text-sm font-semibold ${isSelected ? "text-white" : "text-gray-300"}`}>
+                <p
+                  className={`text-sm font-semibold ${
+                    isSelected ? "text-foreground" : "text-foreground/80"
+                  }`}
+                >
                   {stage.label}
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5">{stage.description}</p>
+                <p className="mt-0.5 text-xs text-muted">
+                  {stage.description}
+                </p>
               </div>
-              <div className={`ml-auto w-4 h-4 rounded-full border-2 shrink-0 transition-colors ${
-                isSelected ? "border-white/20 bg-[#00AFEF]" : "border-gray-600"
-              }`} />
+
+              <div
+                className={`ml-auto h-4 w-4 shrink-0 rounded-full border-2 transition-colors ${
+                  isSelected
+                    ? "border-[#00AFEF] bg-[#00AFEF]"
+                    : "border-border"
+                }`}
+              />
             </button>
           );
         })}
       </div>
 
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && (
+        <p className="text-xs text-red-500" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

@@ -5,7 +5,6 @@ import {
   useEffect,
   useState,
   useCallback,
-  useMemo,
   Suspense,
 } from "react";
 import { useSearchParams } from "next/navigation";
@@ -449,8 +448,8 @@ function MessagesContent() {
 
   return (
     <main
-      className={`mt-3 flex h-[calc(100dvh-1.5rem)] min-h-[32rem] w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-white/20 bg-[#09090B] text-white sm:mt-4 sm:rounded-2xl md:mt-6 md:h-[calc(100dvh-1.5rem)] ${
-        isSidebarHovered ? "md:ml-1" : "md:-ml-14"
+      className={`mt-3 flex h-[calc(100dvh-1.5rem)] min-h-[32rem] w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-background text-foreground sm:mt-4 sm:rounded-2xl md:mt-6 md:h-[calc(100dvh-1.5rem)] ${
+        isSidebarHovered ? "md:ml-6" : "md:ml-14."
       }`}
       style={{
         transition: "margin 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -460,13 +459,13 @@ function MessagesContent() {
       <aside
         className={`${
           showConversationList ? "flex" : "hidden"
-        } h-full w-full min-w-0 flex-col bg-[#0C0C0E] md:flex md:w-72 md:shrink-0 lg:w-80`}
+        } h-full w-full min-w-0 flex-col bg-sidebar md:flex md:w-72 md:shrink-0 lg:w-80`}
       >
         {/* Header and chat mode toggle */}
-        <div className="shrink-0 space-y-3 border-b border-[#1F1F23] px-3 py-3 sm:px-4 sm:py-4">
+        <div className="shrink-0 space-y-3 border-b border-border px-3 py-3 sm:px-4 sm:py-4">
           <div className="flex items-center gap-2">
             <MessageSquare size={16} className="text-[#00AFEF]" />
-            <h2 className="text-sm font-bold text-white">Messages</h2>
+            <h2 className="text-sm font-bold text-foreground">Messages</h2>
           </div>
 
           <ChatToggle
@@ -480,7 +479,6 @@ function MessagesContent() {
                 setActiveConv(null);
               }
 
-              // On mobile, switching modes returns to the list.
               setMobileChatOpen(false);
             }}
             privateUnread={dmUnread}
@@ -514,19 +512,19 @@ function MessagesContent() {
         } h-full min-h-0 min-w-0 flex-1 flex-col md:flex`}
       >
         {/* Mobile chat header with back navigation */}
-        <div className="flex shrink-0 items-center gap-3 border-b border-[#1F1F23] bg-[#0C0C0E] px-3 py-3 md:hidden">
+        <div className="flex shrink-0 items-center gap-3 border-b border-border bg-surface px-3 py-3 md:hidden">
           <button
             type="button"
             onClick={handleMobileBack}
             aria-label="Back to conversations"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#1F1F23] bg-[#121215] text-gray-300 transition-colors hover:text-white"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-secondary text-muted transition-colors hover:text-foreground"
           >
             <ArrowLeft size={18} />
           </button>
 
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-white">Messages</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-sm font-semibold text-foreground">Messages</p>
+            <p className="text-xs text-muted">
               {mode === "group"
                 ? activeGroup?.name || "Team chat"
                 : activeConv?.otherUser?.full_name || "Private conversation"}
@@ -537,18 +535,18 @@ function MessagesContent() {
         <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
           {noActiveChat ? (
             <div className="flex h-full flex-col items-center justify-center gap-4 px-5 text-center sm:px-8">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#1F1F23] bg-[#0F0F11]">
-                <MessageSquare size={28} className="text-gray-700" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-surface">
+                <MessageSquare size={28} className="text-muted" />
               </div>
 
               <div className="space-y-1">
-                <p className="text-base font-semibold text-white sm:text-lg">
+                <p className="text-base font-semibold text-foreground sm:text-lg">
                   {loading
                     ? "Loading messages..."
                     : "Select a conversation"}
                 </p>
 
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted">
                   {loading
                     ? "Please wait..."
                     : mode === "group" && groupConvs.length === 0
@@ -584,8 +582,8 @@ export default function MessagesPage() {
   return (
     <Suspense
       fallback={
-        <div className="mt-3 flex h-[calc(100dvh-1.5rem)] items-center justify-center rounded-xl border border-white/20 bg-[#09090B] sm:mt-4 md:mt-6">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#1F1F23] border-t-[#00AFEF]" />
+        <div className="mt-3 flex h-[calc(100dvh-1.5rem)] items-center justify-center rounded-xl border border-border bg-background sm:mt-4 md:mt-6">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-[#00AFEF]" />
         </div>
       }
     >

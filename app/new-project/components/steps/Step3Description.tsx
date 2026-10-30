@@ -1,3 +1,4 @@
+
 type Props = {
   value: string;
   onChange: (v: string) => void;
@@ -10,10 +11,11 @@ export default function Step3Description({ value, onChange, error }: Props) {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold text-white">
+        <h2 className="text-2xl font-bold text-foreground">
           Describe your project in one sentence.
         </h2>
-        <p className="text-sm text-gray-400">
+
+        <p className="text-sm text-muted">
           Keep it short and compelling — this is your project's elevator pitch.
         </p>
       </div>
@@ -25,22 +27,28 @@ export default function Step3Description({ value, onChange, error }: Props) {
           onChange={(e) => onChange(e.target.value.slice(0, MAX))}
           placeholder="A platform connecting African founders with developers and investors."
           autoFocus
-          className={`w-full resize-none rounded-xl border bg-[#0D0D0D]/60 px-5 py-4 text-white placeholder:text-white/25 outline-none transition-colors text-sm leading-relaxed ${
+          aria-invalid={!!error}
+          className={`w-full resize-none rounded-xl border bg-surface-secondary px-5 py-4 text-sm leading-relaxed text-foreground placeholder:text-muted/50 outline-none transition-colors ${
             error
               ? "border-red-500/60 focus:border-red-400"
-              : "border-white/5 hover:border-white/10 focus:border-white/20"
+              : "border-border hover:border-[#00AFEF]/30 focus:border-[#00AFEF]"
           }`}
         />
+
         <div className="flex items-center justify-between px-1">
           {error ? (
-            <p className="text-xs text-red-400">{error}</p>
+            <p className="text-xs text-red-400" role="alert">
+              {error}
+            </p>
           ) : (
             <span />
           )}
+
           <span
             className={`text-xs ${
-              value.length >= MAX ? "text-red-400" : "text-gray-500"
+              value.length >= MAX ? "text-red-400" : "text-muted"
             }`}
+            aria-live="polite"
           >
             {value.length}/{MAX}
           </span>

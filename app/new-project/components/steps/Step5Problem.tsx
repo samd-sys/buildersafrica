@@ -1,3 +1,4 @@
+
 type Props = {
   value: string;
   onChange: (v: string) => void;
@@ -8,10 +9,10 @@ export default function Step5Problem({ value, onChange, error }: Props) {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold text-white">
+        <h2 className="text-2xl font-bold text-foreground">
           What problem does your project solve?
         </h2>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted">
           Be specific — the clearer the problem, the stronger the solution.
         </p>
       </div>
@@ -23,13 +24,19 @@ export default function Step5Problem({ value, onChange, error }: Props) {
           onChange={(e) => onChange(e.target.value)}
           placeholder="Describe the problem your project aims to solve."
           autoFocus
-          className={`w-full resize-none rounded-xl border bg-[#0D0D0D]/60 px-5 py-4 text-white placeholder:text-white/25 outline-none transition-colors text-sm leading-relaxed ${
+          aria-invalid={!!error}
+          className={`w-full resize-none rounded-xl border bg-surface-secondary px-5 py-4 text-sm leading-relaxed text-foreground placeholder:text-muted/50 outline-none transition-colors ${
             error
-              ? "border-red-500/60 focus:border-red-400"
-              : "border-white/5 hover:border-white/10 focus:border-white/20"
+              ? "border-red-500/60 focus:border-red-500"
+              : "border-border hover:border-[#00AFEF]/50 focus:border-[#00AFEF]"
           }`}
         />
-        {error && <p className="text-xs text-red-400 px-1">{error}</p>}
+
+        {error && (
+          <p className="px-1 text-xs text-red-500" role="alert">
+            {error}
+          </p>
+        )}
 
         {/* AI_HOOK: Add "✨ Refine Problem Statement with AI" button here
             that sends `value` to an LLM and calls onChange() with a

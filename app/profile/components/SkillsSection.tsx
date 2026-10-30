@@ -1,3 +1,4 @@
+
 import { Dispatch, SetStateAction } from "react";
 import SkillTagInput from "./SkillTagInput";
 
@@ -8,14 +9,16 @@ type Props = {
 
 export default function SkillsSection({ skills, setSkills }: Props) {
   return (
-    <div className="space-y-4 pt-4 border-t border-white/5 mt-6">
-      <h4 className="text-sm font-semibold text-white/60 tracking-wider uppercase">
+    <div className="mt-6 space-y-4 border-t border-border pt-4">
+      <h4 className="text-sm font-semibold uppercase tracking-wider text-muted">
         Skills
       </h4>
-      <p className="text-xs text-gray-400 -mt-2">
+
+      <p className="-mt-2 text-xs text-muted">
         Add the skills you want recruiters and collaborators to see on
         your profile. Press Enter to add a skill.
       </p>
+
       <SkillTagInput skills={skills} setSkills={setSkills} />
     </div>
   );

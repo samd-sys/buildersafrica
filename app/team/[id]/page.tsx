@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -20,168 +21,344 @@ export default function TeamPage() {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [currentUserId, setCurrentUserId] = useState("");
   const [loading, setLoading] = useState(true);
-  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [selectedMember, setSelectedMember] =
+    useState<TeamMember | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
 
+  // Sidebar hover listener
   useEffect(() => {
-    const handleSidebarHover = (event: CustomEvent) => {
-      setIsSidebarHovered(event.detail.isHovered);
+    const handleSidebarHover = (event: Event) => {
+      const customEvent = event as CustomEvent;
+
+      setIsSidebarHovered(
+        customEvent.detail.isHovered
+      );
     };
-    window.addEventListener("sidebarHover", handleSidebarHover as EventListener);
-    return () =>
-      window.removeEventListener("sidebarHover", handleSidebarHover as EventListener);
+
+    window.addEventListener(
+      "sidebarHover",
+      handleSidebarHover
+    );
+
+    return () => {
+      window.removeEventListener(
+        "sidebarHover",
+        handleSidebarHover
+      );
+    };
   }, []);
 
-  const loadPage = async () => {
-    setLoading(true);
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push("/login"); return; }
-    setCurrentUserId(user.id);
-
-    // Load project
-    const { data: proj, error: projError } = await supabase
-      .from("projects")
-      .select("id, title, description, logo_url, user_id")
-      .eq("id", projectId)
-      .single();
-
-    if (projError || !proj) { router.push("/projects"); return; }
-    setProject(proj);
-
-    const isFounder = proj.user_id === user.id;
-
-    // Check access: must be founder or team member
-    if (!isFounder) {
-      const { data: membership } = await supabase
-        .from("team_members")
-        .select("id")
-        .eq("project_id", projectId)
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (!membership) { router.push("/projects"); return; }
-    }
-
-    // Load team members + their profiles
-    const { data: teamData } = await supabase
-      .from("team_members")
-      .select("*")
-      .eq("project_id", projectId)
-      .order("joined_at", { ascending: true });
-
-    if (!teamData || teamData.length === 0) {
-      setMembers([]);
-      setLoading(false);
-      return;
-    }
-
-    const userIds = teamData.map((m: any) => m.user_id);
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, full_name, avatar_url, professional_title, country, bio, skills, github_url, linkedin_url, website_url")
-      .in("user_id", userIds);
-
-    // Fetch emails from auth (only available for founder via service role in prod,
-    // here we just use what's in profiles)
-    const profileMap: Record<string, any> = {};
-    profiles?.forEach((p: any) => { profileMap[p.user_id] = p; });
-
-    const enriched: TeamMember[] = teamData.map((m: any) => {
-      const p = profileMap[m.user_id] ?? {};
-      return {
-        id: m.id,
-        user_id: m.user_id,
-        project_id: m.project_id,
-        role: m.role || "Collaborator",
-        status: m.status || "active",
-        joined_at: m.joined_at,
-        full_name: p.full_name || "Unnamed Builder",
-        avatar_url: p.avatar_url || "",
-        professional_title: p.professional_title || "",
-        country: p.country || "",
-        bio: p.bio || "",
-        skills: Array.isArray(p.skills)
-          ? p.skills
-          : typeof p.skills === "string"
-          ? p.skills.split(",").map((s: string) => s.trim()).filter(Boolean)
-          : [],
-        github_url: p.github_url || "",
-        linkedin_url: p.linkedin_url || "",
-        website_url: p.website_url || "",
-        email: "",
-      };
-    });
-
-    setMembers(enriched);
-    setLoading(false);
-  };
-
+  // Load project and team data
   useEffect(() => {
-    if (projectId) loadPage();
+    if (!projectId) return;
+
+    let isMounted = true;
+
+    const loadPage = async () => {
+      setLoading(true);
+
+      try {
+        // Get authenticated user
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError || !user) {
+          router.push("/login");
+          return;
+        }
+
+        if (!isMounted) return;
+
+        setCurrentUserId(user.id);
+
+        // Load project
+        const { data: proj, error: projError } =
+          await supabase
+            .from("projects")
+            .select(
+              "id, title, description, logo_url, user_id"
+            )
+            .eq("id", projectId)
+            .single();
+
+        if (projError || !proj) {
+          router.push("/projects");
+          return;
+        }
+
+        if (!isMounted) return;
+
+        setProject(proj);
+
+        const founder = proj.user_id === user.id;
+
+        // Check access: founder or team member
+        if (!founder) {
+          const {
+            data: membership,
+            error: membershipError,
+          } = await supabase
+            .from("team_members")
+            .select("id")
+            .eq("project_id", projectId)
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          if (membershipError || !membership) {
+            router.push("/projects");
+            return;
+          }
+        }
+
+        if (!isMounted) return;
+
+        // Load team members
+        const { data: teamData, error: teamError } =
+          await supabase
+            .from("team_members")
+            .select("*")
+            .eq("project_id", projectId)
+            .order("joined_at", { ascending: true });
+
+        if (teamError) {
+          console.error(
+            "Failed to load team members:",
+            teamError
+          );
+
+          setMembers([]);
+          return;
+        }
+
+        if (!isMounted) return;
+
+        if (!teamData || teamData.length === 0) {
+          setMembers([]);
+          return;
+        }
+
+        // Load member profiles
+        const userIds = teamData.map(
+          (member) => member.user_id
+        );
+
+        const {
+          data: profiles,
+          error: profilesError,
+        } = await supabase
+          .from("profiles")
+          .select(
+            "user_id, full_name, avatar_url, professional_title, country, bio, skills, github_url, linkedin_url, website_url"
+          )
+          .in("user_id", userIds);
+
+        if (profilesError) {
+          console.error(
+            "Failed to load member profiles:",
+            profilesError
+          );
+        }
+
+        if (!isMounted) return;
+
+        // Create profile lookup
+        const profileMap: Record<string, any> = {};
+
+        profiles?.forEach((profile) => {
+          profileMap[profile.user_id] = profile;
+        });
+
+        // Combine team members with their profiles
+        const enriched: TeamMember[] = teamData.map(
+          (member) => {
+            const profile =
+              profileMap[member.user_id] ?? {};
+
+            return {
+              id: member.id,
+              user_id: member.user_id,
+              project_id: member.project_id,
+              role: member.role || "Collaborator",
+              status: member.status || "active",
+              joined_at: member.joined_at,
+
+              full_name:
+                profile.full_name || "Unnamed Builder",
+
+              avatar_url: profile.avatar_url || "",
+
+              professional_title:
+                profile.professional_title || "",
+
+              country: profile.country || "",
+              bio: profile.bio || "",
+
+              skills: Array.isArray(profile.skills)
+                ? profile.skills
+                : typeof profile.skills === "string"
+                ? profile.skills
+                    .split(",")
+                    .map((skill: string) => skill.trim())
+                    .filter(Boolean)
+                : [],
+
+              github_url: profile.github_url || "",
+              linkedin_url: profile.linkedin_url || "",
+              website_url: profile.website_url || "",
+              email: "",
+            };
+          }
+        );
+
+        setMembers(enriched);
+      } catch (error) {
+        console.error(
+          "Failed to load team page:",
+          error
+        );
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadPage();
+
+    return () => {
+      isMounted = false;
+    };
+
+    // projectId is the only value that triggers a reload.
+    // Keep this dependency array fixed.
   }, [projectId]);
 
-  const isFounder = project?.user_id === currentUserId;
+  const isFounder =
+    project?.user_id === currentUserId;
 
-  const handleRemoveMember = async (member: TeamMember) => {
+  // Remove team member
+  const handleRemoveMember = async (
+    member: TeamMember
+  ) => {
     const { error } = await supabase
       .from("team_members")
       .delete()
       .eq("id", member.id);
 
-    if (error) { alert(error.message); return; }
-    setMembers((prev) => prev.filter((m) => m.id !== member.id));
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
-    // Notify the removed member
+    setMembers((prev) =>
+      prev.filter((m) => m.id !== member.id)
+    );
+
+    setSelectedMember((prev) =>
+      prev?.id === member.id ? null : prev
+    );
+
+    // Notify removed member
     const { data: founderProfile } = await supabase
       .from("profiles")
       .select("full_name")
       .eq("user_id", currentUserId)
       .single();
 
-    await supabase.from("notifications").insert([{
-      user_id: member.user_id,
-      title: "Removed from Project",
-      message: `${founderProfile?.full_name || "The founder"} has removed you from the project: ${project?.title}.`,
-      type: "member_removed",
-      related_project_id: projectId,
-      sender_id: currentUserId,
-    }]);
+    const { error: notificationError } =
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id: member.user_id,
+            title: "Removed from Project",
+            message: `${
+              founderProfile?.full_name ||
+              "The founder"
+            } has removed you from the project: ${
+              project?.title
+            }.`,
+            type: "member_removed",
+            related_project_id: projectId,
+            sender_id: currentUserId,
+          },
+        ]);
+
+    if (notificationError) {
+      console.error(
+        "Failed to send removal notification:",
+        notificationError
+      );
+    }
   };
 
-  const handleChangeRole = async (member: TeamMember, newRole: string) => {
+  // Change member role
+  const handleChangeRole = async (
+    member: TeamMember,
+    newRole: string
+  ) => {
     const { error } = await supabase
       .from("team_members")
       .update({ role: newRole })
       .eq("id", member.id);
 
-    if (error) { alert(error.message); return; }
+    if (error) {
+      throw error;
+    }
 
     setMembers((prev) =>
-      prev.map((m) => (m.id === member.id ? { ...m, role: newRole } : m))
-    );
-    setSelectedMember((prev) =>
-      prev?.id === member.id ? { ...prev, role: newRole } : prev
+      prev.map((m) =>
+        m.id === member.id
+          ? { ...m, role: newRole }
+          : m
+      )
     );
 
-    // Notify the member
-    await supabase.from("notifications").insert([{
-      user_id: member.user_id,
-      title: "Role Updated",
-      message: `Your role in ${project?.title} has been updated to ${newRole}.`,
-      type: "role_changed",
-      related_project_id: projectId,
-      sender_id: currentUserId,
-    }]);
+    setSelectedMember((prev) =>
+      prev?.id === member.id
+        ? { ...prev, role: newRole }
+        : prev
+    );
+
+    // Notify member
+    const { error: notificationError } =
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_id: member.user_id,
+            title: "Role Updated",
+            message: `Your role in ${project?.title} has been updated to ${newRole}.`,
+            type: "role_changed",
+            related_project_id: projectId,
+            sender_id: currentUserId,
+          },
+        ]);
+
+    if (notificationError) {
+      console.error(
+        "Failed to send role update notification:",
+        notificationError
+      );
+    }
   };
 
+  // Loading screen
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#09090B] flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 size={28} className="animate-spin text-[#00AFEF]" />
-          <p className="text-sm text-gray-400">Loading team...</p>
+          <Loader2
+            size={28}
+            className="animate-spin text-[#00AFEF]"
+          />
+
+          <p className="text-sm text-muted">
+            Loading team...
+          </p>
         </div>
       </div>
     );
@@ -191,20 +368,27 @@ export default function TeamPage() {
 
   return (
     <div
-      className={`mt-6 h-160 rounded-3xl border border-white/20 bg-[#0F0F11] text-white transition-all duration-500 ease-in-out ${
+      className={`mt-6 min-h-[calc(100vh-2rem)] rounded-3xl border border-border bg-background text-foreground transition-all duration-500 ease-in-out ${
         isSidebarHovered ? "ml-16" : "ml-0"
       }`}
       style={{
-        transform: isSidebarHovered ? "scale(1.005)" : "scale(1)",
-        filter: isSidebarHovered ? "brightness(0.98)" : "brightness(1)",
-        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+        transform: isSidebarHovered
+          ? "scale(1.005)"
+          : "scale(1)",
+
+        filter: isSidebarHovered
+          ? "brightness(0.98)"
+          : "brightness(1)",
+
+        transition:
+          "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
-      <div className="mx-auto max-w-4xl px-4 py-10 space-y-6">
+      <div className="mx-auto max-w-4xl space-y-6 px-4 py-10">
         {/* Back link */}
         <Link
           href="/my-projects"
-          className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-md text-sm text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF]"
         >
           <ArrowLeft size={15} />
           My Projects
@@ -224,7 +408,9 @@ export default function TeamPage() {
           isFounder={isFounder}
           onViewProfile={setSelectedMember}
           onRemove={handleRemoveMember}
-          onChangeRole={(member) => setSelectedMember(member)}
+          onChangeRole={(member) =>
+            setSelectedMember(member)
+          }
         />
       </div>
 
@@ -243,7 +429,10 @@ export default function TeamPage() {
         onClose={() => setInviteOpen(false)}
         projectId={projectId}
         projectTitle={project.title}
-        existingMemberIds={[...members.map((m) => m.user_id), currentUserId]}
+        existingMemberIds={[
+          ...members.map((m) => m.user_id),
+          currentUserId,
+        ]}
       />
     </div>
   );

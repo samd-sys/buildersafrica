@@ -273,8 +273,8 @@ export default function Profile() {
 
   return (
     <main
-      className={`mt-3 flex h-[calc(100dvh-1.5rem)] min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-white/20 bg-[#09090B] text-white sm:mt-4 sm:rounded-2xl md:mt-6 ${
-        isSidebarHovered ? "md:ml-1" : "md:-ml-14"
+      className={`mt-3 flex h-[calc(100dvh-1.5rem)] min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-border bg-background text-foreground sm:mt-4 sm:rounded-2xl md:mt-6 ${
+        isSidebarHovered ? "md:ml-6" : "md:ml-14."
       }`}
       style={{
         transition: "margin 0.4s cubic-bezier(0.4, 0, 0.2, 1)",

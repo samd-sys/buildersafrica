@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
@@ -23,9 +24,17 @@ export default function Builders() {
     const handleSidebarHover = (event: CustomEvent) => {
       setIsSidebarHovered(event.detail.isHovered);
     };
-    window.addEventListener("sidebarHover", handleSidebarHover as EventListener);
+
+    window.addEventListener(
+      "sidebarHover",
+      handleSidebarHover as EventListener
+    );
+
     return () =>
-      window.removeEventListener("sidebarHover", handleSidebarHover as EventListener);
+      window.removeEventListener(
+        "sidebarHover",
+        handleSidebarHover as EventListener
+      );
   }, []);
 
   const loadBuilders = useCallback(async (rawQuery = "") => {
@@ -56,12 +65,14 @@ export default function Builders() {
             `skills.ilike.%${kw}%,professional_title.ilike.%${kw}%,bio.ilike.%${kw}%`
         )
         .join(",");
+
       query = query.or(orClauses);
     }
 
     const { data, error } = await query;
 
     if (error) console.error(error);
+
     setBuilders(data || []);
     setIsSearching(false);
   }, []);
@@ -80,27 +91,27 @@ export default function Builders() {
   };
 
   return (
-<div
-  className={`mt-3 min-h-[calc(100dvh-1.5rem)] w-full min-w-0 max-w-full rounded-xl border border-[#1F1F23] bg-[#09090B] text-white sm:mt-4 sm:rounded-2xl md:mt-6 md:h-[calc(100dvh-1.5rem)] md:overflow-hidden ${
-    isSidebarHovered ? "md:ml-1" : "md:-ml-14"
-  }`}
-  style={{
-    transition: "margin 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-  }}
->
-      
-        <div className="mx-auto w-full max-w-none space-y-4 px-3 py-4 sm:px-5 sm:py-6 md:px-6 md:py-8">
+    <div
+      className={`mt-3 min-h-[calc(100dvh-1.5rem)] w-full min-w-0 max-w-full rounded-xl border border-border bg-background text-foreground sm:mt-4 sm:rounded-2xl md:mt-6 md:h-[calc(100dvh-1.5rem)] md:overflow-hidden ${
+        isSidebarHovered ? "md:ml-6" : "md:ml-14."
+      }`}
+      style={{
+        transition: "margin 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+      }}
+    >
+      <div className="mx-auto w-full max-w-none space-y-4 px-3 py-4 sm:px-5 sm:py-6 md:px-6 md:py-8">
         {/* Header card — online status and CTA */}
-        <div className="rounded-xl border border-[#1F1F23] bg-[#0F0F11] p-3 sm:p-4">
-  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <OnlineStatusBar count={builders.length} />
+        <div className="rounded-xl border border-border bg-surface p-3 transition-colors sm:p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <OnlineStatusBar count={builders.length} />
 
-    <div className="w-full sm:w-auto">
-      <FindTeamMemberButton onClick={handleFindTeamMember} />
-    </div>
-  </div>
-</div>
+            <div className="w-full sm:w-auto">
+              <FindTeamMemberButton onClick={handleFindTeamMember} />
+            </div>
+          </div>
+        </div>
 
+        {/* AI Search */}
         <div className="flex justify-center">
           <div className="w-full max-w-3xl">
             <AISearchBar
@@ -114,7 +125,7 @@ export default function Builders() {
 
         {/* Results header */}
         <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2 text-sm text-gray-400">
+          <div className="flex items-center gap-2 text-sm text-muted">
             <Users size={14} />
             <span>
               {isSearching
@@ -127,17 +138,23 @@ export default function Builders() {
         {/* Grid */}
         {builders.length === 0 && !isSearching ? (
           <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
-            <Users size={40} className="text-gray-700" />
-            <p className="text-lg font-semibold text-white">No builders found</p>
-            <p className="text-sm text-gray-500">
+            <Users size={40} className="text-muted" />
+
+            <p className="text-lg font-semibold text-foreground">
+              No builders found
+            </p>
+
+            <p className="text-sm text-muted">
               Try a different search query or clear the search to see all builders.
             </p>
+
             <button
+              type="button"
               onClick={() => {
                 setSearchInput("");
                 loadBuilders();
               }}
-              className="mt-2 rounded-full border border-white/10 px-4 py-2 text-sm text-gray-400 hover:text-white hover:border-white/20 transition-colors"
+              className="mt-2 rounded-full border border-border bg-surface-secondary px-4 py-2 text-sm text-muted transition-colors hover:border-[#00AFEF]/40 hover:text-[#00AFEF]"
             >
               Clear search
             </button>

@@ -1,3 +1,4 @@
+
 import React from "react";
 
 type InputFieldProps = {
@@ -25,34 +26,34 @@ export default function InputField({
 }: InputFieldProps) {
   return (
     <div className="space-y-2">
-      {/* Label context */}
+      {/* Label */}
       <div className="flex items-center gap-1">
-        <label className="text-sm font-medium text-gray-300">
+        <label className="text-sm font-medium text-foreground">
           {label}
+          {required && (
+            <span className="ml-1 text-red-500 text-xs">*</span>
+          )}
         </label>
-        {required && (
-          <span className="text-red-400 text-xs">*</span>
-        )}
       </div>
 
-      {/* Input background container matching target system spec */}
+      {/* Input container */}
       <div
         className={`
           flex items-center
           rounded-xl
           border
-          bg-[#0D0D0D]/40
+          bg-surface
           transition-all
           duration-200
           ${
             error
-              ? "border-red-500/80 focus-within:border-red-400"
-              : "border-white/5 hover:border-white/10 focus-within:border-[#6366F1]"
+              ? "border-red-500/80 focus-within:border-red-500"
+              : "border-border hover:border-[#00AFEF]/50 focus-within:border-[#00AFEF]"
           }
         `}
       >
         {icon && (
-          <div className="pl-4 text-white/30">
+          <div className="pl-4 text-muted" aria-hidden="true">
             {icon}
           </div>
         )}
@@ -62,29 +63,31 @@ export default function InputField({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
+          required={required}
+          aria-invalid={!!error}
           className="
             w-full
             bg-transparent
             px-4
             py-3
             text-sm
-            text-white
-            placeholder:text-white/20
+            text-foreground
+            placeholder:text-muted
             outline-none
           "
         />
       </div>
 
-      {/* Helper text block info */}
+      {/* Helper text */}
       {!error && helperText && (
-        <p className="text-xs text-white/40 px-1">
+        <p className="px-1 text-xs text-muted">
           {helperText}
         </p>
       )}
 
-      {/* Field Validation warnings */}
+      {/* Validation error */}
       {error && (
-        <p className="text-xs text-red-400 px-1">
+        <p className="px-1 text-xs text-red-500" role="alert">
           {error}
         </p>
       )}

@@ -1,3 +1,6 @@
+
+"use client";
+
 import { useEffect, useState } from "react";
 import {
   X,
@@ -17,7 +20,6 @@ import { countryToFlag } from "../lib/countryFlag";
 import { supabase } from "@/lib/supabase";
 import SendMessageModal from "@/app/messages/components/SendMessageModal";
 
-
 type Props = {
   builder: Builder | null;
   onClose: () => void;
@@ -31,7 +33,6 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
   const [inviteDone, setInviteDone] = useState(false);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
 
-
   useEffect(() => {
     if (!builder) return;
     setInviteDone(false);
@@ -42,6 +43,7 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
@@ -50,6 +52,7 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
     if (!user || !builder) return;
 
     const { data } = await supabase
@@ -89,7 +92,6 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
     if (error) {
       alert(error.message);
     } else {
-      // Fetch the sender's name so the notification is personal
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name")
@@ -107,6 +109,7 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
           related_project_id: null,
         },
       ]);
+
       setConnectionStatus("pending");
     }
 
@@ -139,7 +142,6 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
 
     const project = projects[0];
 
-    // Fetch the inviter's name so the notification is personal
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name")
@@ -195,32 +197,35 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
 
       {/* Drawer */}
       <div
-        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-[480px] flex-col border-l border-[#1F1F23] bg-[#0C0C0E] shadow-2xl transition-all duration-300 ease-in-out ${
+        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-[480px] flex-col border-l border-border bg-surface shadow-2xl transition-all duration-300 ease-in-out ${
           isOpen
             ? "translate-x-0 opacity-100 visible"
             : "translate-x-full opacity-0 invisible pointer-events-none"
         }`}
       >
         {/* Close button */}
-        <div className="flex shrink-0 items-center justify-between border-b border-[#1F1F23] px-6 py-4">
-          <span className="text-sm font-medium text-gray-400">
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-6 py-4">
+          <span className="text-sm font-medium text-muted">
             Builder Profile
           </span>
+
           <button
+            type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-white/5 hover:text-white"
+            aria-label="Close builder profile"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-secondary hover:text-foreground"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
           {builder && (
             <>
               {/* Profile header */}
-              <div className="flex flex-col items-center text-center gap-3">
-                <div className="h-24 w-24 overflow-hidden rounded-full border-2 border-[#27272A] bg-[#18181B] flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-surface-secondary">
                   {builder.avatar_url ? (
                     <img
                       src={builder.avatar_url}
@@ -228,25 +233,27 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <User size={36} className="text-gray-600" />
+                    <User size={36} className="text-muted" />
                   )}
                 </div>
 
                 <div className="space-y-0.5">
-                  <h2 className="text-xl font-bold text-white">
+                  <h2 className="text-xl font-bold text-foreground">
                     {builder.full_name || "Unnamed Builder"}
                   </h2>
+
                   <p className="text-sm font-medium text-[#00AFEF]">
                     {builder.professional_title || "Builder"}
                   </p>
-                  <p className="flex items-center justify-center gap-1.5 text-xs text-gray-400">
+
+                  <p className="flex items-center justify-center gap-1.5 text-xs text-muted">
                     <span>{countryToFlag(builder.country)}</span>
                     <span>{builder.country || "Location not set"}</span>
                   </p>
                 </div>
 
                 {builder.created_at && (
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <div className="flex items-center gap-1.5 text-xs text-muted">
                     <CalendarDays size={12} />
                     <span>Joined {formatJoined(builder.created_at)}</span>
                   </div>
@@ -256,16 +263,17 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
               {/* Action buttons */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <button
+                  type="button"
                   onClick={handleConnect}
                   disabled={isConnecting || connectionStatus !== "none"}
                   className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all ${
                     connectionStatus === "accepted"
-                      ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 cursor-default"
+                      ? "cursor-default border border-emerald-500/20 bg-emerald-500/10 text-emerald-500"
                       : connectionStatus === "pending"
-                      ? "bg-white/5 border border-white/10 text-gray-400 cursor-default"
+                      ? "cursor-default border border-border bg-surface-secondary text-muted"
                       : connectionStatus === "declined"
-                      ? "bg-red-500/10 border border-red-500/20 text-red-400 cursor-default"
-                      : "bg-[#00AFEF] text-white hover:bg-[#00AFEF] active:scale-[0.98]"
+                      ? "cursor-default border border-red-500/20 bg-red-500/10 text-red-500"
+                      : "bg-[#00AFEF] text-white hover:bg-[#009bd4] active:scale-[0.98]"
                   }`}
                 >
                   {isConnecting ? (
@@ -279,12 +287,13 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
                 </button>
 
                 <button
+                  type="button"
                   onClick={handleInvite}
                   disabled={isInviting || inviteDone}
                   className={`flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-semibold transition-all ${
                     inviteDone
-                      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400 cursor-default"
-                      : "border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.07] active:scale-[0.98]"
+                      ? "cursor-default border-emerald-500/20 bg-emerald-500/10 text-emerald-500"
+                      : "border-border bg-surface-secondary text-foreground hover:border-[#00AFEF]/40 hover:bg-[#00AFEF]/10 active:scale-[0.98]"
                   }`}
                 >
                   {isInviting ? (
@@ -298,8 +307,9 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => setMessageModalOpen(true)}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-[#1F1F23] bg-white/[0.03] py-2.5 text-sm font-semibold text-white hover:bg-white/[0.07] transition-all"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-border bg-surface-secondary py-2.5 text-sm font-semibold text-foreground transition-all hover:border-[#00AFEF]/40 hover:bg-[#00AFEF]/10 hover:text-[#00AFEF]"
                 >
                   <MessageSquare size={14} />
                   Message
@@ -309,11 +319,12 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
               {/* Bio */}
               {builder.bio && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-semibold tracking-wider text-gray-500">
+                  <h4 className="text-xs font-semibold tracking-wider text-muted">
                     About me
                   </h4>
-                  <div className="rounded-xl border border-[#1F1F23] bg-[#121215] p-4">
-                    <p className="text-xs leading-relaxed text-gray-300">
+
+                  <div className="rounded-xl border border-border bg-surface-secondary p-4">
+                    <p className="text-xs leading-relaxed text-foreground">
                       {builder.bio}
                     </p>
                   </div>
@@ -323,15 +334,16 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
               {/* Skills */}
               {builder.skills && builder.skills.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted">
                     Skills
                   </h4>
-                  <div className="rounded-xl border border-white/10 bg-[#121215] p-4">
+
+                  <div className="rounded-xl border border-border bg-surface-secondary p-4">
                     <div className="flex flex-wrap gap-2">
                       {builder.skills.map((skill) => (
                         <span
                           key={skill}
-                          className="rounded-lg border border-white/10 bg-gray px-3 py-1 text-xs font-medium text-[#00AFEF]"
+                          className="rounded-lg border border-border bg-surface px-3 py-1 text-xs font-medium text-[#00AFEF]"
                         >
                           {skill}
                         </span>
@@ -346,38 +358,41 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
                 builder.linkedin_url ||
                 builder.website_url) && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted">
                     Links
                   </h4>
-                  <div className="rounded-xl border border-[#1F1F23] bg-[#121215] p-4 space-y-3">
+
+                  <div className="space-y-3 rounded-xl border border-border bg-surface-secondary p-4">
                     {builder.github_url && (
                       <a
                         href={builder.github_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors"
+                        className="flex items-center gap-2 text-xs text-muted transition-colors hover:text-[#00AFEF]"
                       >
                         <Link2 size={14} className="shrink-0" />
                         <span className="truncate">{builder.github_url}</span>
                       </a>
                     )}
+
                     {builder.linkedin_url && (
                       <a
                         href={builder.linkedin_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors"
+                        className="flex items-center gap-2 text-xs text-muted transition-colors hover:text-[#00AFEF]"
                       >
                         <ExternalLink size={14} className="shrink-0" />
                         <span className="truncate">{builder.linkedin_url}</span>
                       </a>
                     )}
+
                     {builder.website_url && (
                       <a
                         href={builder.website_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors"
+                        className="flex items-center gap-2 text-xs text-muted transition-colors hover:text-[#00AFEF]"
                       >
                         <Globe size={14} className="shrink-0" />
                         <span className="truncate">{builder.website_url}</span>

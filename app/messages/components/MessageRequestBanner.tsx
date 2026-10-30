@@ -1,3 +1,6 @@
+
+"use client";
+
 import { Check, X, Ban, Loader2 } from "lucide-react";
 import { useState } from "react";
 
@@ -28,26 +31,30 @@ export default function MessageRequestBanner({
   };
 
   return (
-    <div className="shrink-0 border-b border-[#1F1F23] bg-[#00AFEF]/[0.04] px-4 py-4">
+    <div className="shrink-0 border-b border-border bg-[#00AFEF]/[0.04] px-4 py-4">
       <div className="flex items-start gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#00AFEF]/10 border border-[#00AFEF]/20 shrink-0 text-[#00AFEF] text-sm">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#00AFEF]/20 bg-[#00AFEF]/10 text-sm text-[#00AFEF]">
           ✉️
         </div>
-        <div className="flex-1 min-w-0 space-y-3">
+
+        <div className="min-w-0 flex-1 space-y-3">
           <div>
-            <p className="text-sm font-semibold text-white">
+            <p className="text-sm font-semibold text-foreground">
               Message request from {senderName}
             </p>
-            <p className="text-xs text-gray-400 mt-0.5">
+
+            <p className="mt-0.5 text-xs text-muted">
               Do you want to accept this message request? They will not know you
               declined if you choose not to accept.
             </p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+
+          <div className="flex flex-wrap items-center gap-2">
             <button
+              type="button"
               onClick={() => handle("accept", onAccept)}
               disabled={!!acting}
-              className="flex items-center gap-1.5 rounded-lg bg-[#00AFEF] px-4 py-1.5 text-xs font-semibold text-slate-950 hover:bg-[#00AFEF]/80 transition-colors disabled:opacity-60"
+              className="flex items-center gap-1.5 rounded-lg bg-[#00AFEF] px-4 py-1.5 text-xs font-semibold text-slate-950 transition-colors hover:bg-[#00AFEF]/80 disabled:opacity-60"
             >
               {acting === "accept" ? (
                 <Loader2 size={12} className="animate-spin" />
@@ -56,10 +63,12 @@ export default function MessageRequestBanner({
               )}
               Accept
             </button>
+
             <button
+              type="button"
               onClick={() => handle("decline", onDecline)}
               disabled={!!acting}
-              className="flex items-center gap-1.5 rounded-lg border border-[#1F1F23] bg-[#121215] px-4 py-1.5 text-xs font-medium text-gray-400 hover:text-white transition-colors disabled:opacity-60"
+              className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-secondary px-4 py-1.5 text-xs font-medium text-muted transition-colors hover:text-foreground disabled:opacity-60"
             >
               {acting === "decline" ? (
                 <Loader2 size={12} className="animate-spin" />
@@ -68,10 +77,12 @@ export default function MessageRequestBanner({
               )}
               Decline
             </button>
+
             <button
+              type="button"
               onClick={() => handle("block", onBlock)}
               disabled={!!acting}
-              className="flex items-center gap-1.5 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-60"
+              className="flex items-center gap-1.5 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-1.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-60"
             >
               {acting === "block" ? (
                 <Loader2 size={12} className="animate-spin" />

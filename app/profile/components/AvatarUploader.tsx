@@ -1,3 +1,6 @@
+
+"use client";
+
 import { useRef, useState } from "react";
 import { User, Camera, Loader2 } from "lucide-react";
 
@@ -9,8 +12,7 @@ type AvatarUploaderProps = {
 
 /**
  * Click the avatar -> hidden file input opens -> instant local
- * preview via a blob URL while onFileSelected (passed down from
- * page.tsx) uploads the file to storage and resolves the real URL.
+ * preview via a blob URL while onFileSelected uploads the file.
  */
 export default function AvatarUploader({
   avatarUrl,
@@ -33,7 +35,8 @@ export default function AvatarUploader({
       await onFileSelected(file);
     } finally {
       setIsUploading(false);
-      // Reset the input so selecting the same file again still fires onChange
+
+      // Reset the input so selecting the same file again still fires onChange.
       e.target.value = "";
     }
   };
@@ -41,10 +44,12 @@ export default function AvatarUploader({
   const displayUrl = localPreview || avatarUrl;
 
   return (
-    <div
+    <button
+      type="button"
       onClick={() => fileInputRef.current?.click()}
-      className="relative w-24 h-24 rounded-full bg-[#18181B] border-2 border-[#27272A] flex items-center justify-center group overflow-hidden cursor-pointer shadow-xl"
+      className="group relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-surface-secondary shadow-xl"
       title="Click to change photo"
+      aria-label="Change profile photo"
     >
       <input
         ref={fileInputRef}
@@ -52,6 +57,7 @@ export default function AvatarUploader({
         accept="image/*"
         onChange={handleFile}
         className="hidden"
+        aria-label="Choose profile photo"
       />
 
       {displayUrl ? (
@@ -63,21 +69,21 @@ export default function AvatarUploader({
       ) : (
         <User
           size={32}
-          className="text-gray-600 group-hover:scale-105 transition-transform"
+          className="text-muted transition-transform group-hover:scale-105"
         />
       )}
 
       <div
-        className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-all duration-200 ${
+        className={`absolute inset-0 flex items-center justify-center bg-black/60 transition-all duration-200 ${
           isUploading ? "opacity-100" : "opacity-0 group-hover:opacity-100"
         }`}
       >
         {isUploading ? (
-          <Loader2 size={18} className="text-white animate-spin" />
+          <Loader2 size={18} className="animate-spin text-white" />
         ) : (
           <Camera size={18} className="text-white" />
         )}
       </div>
-    </div>
+    </button>
   );
 }

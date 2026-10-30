@@ -387,8 +387,8 @@ export default function NotificationsPage() {
 
   return (
     <main
-      className={`mt-3 min-h-[calc(100dvh-1.5rem)] w-full min-w-0 max-w-full rounded-xl border border-white/20 bg-[#09090B] text-white sm:mt-4 sm:rounded-2xl md:mt-6 md:h-[calc(100dvh-1.5rem)] md:overflow-hidden ${
-        isSidebarHovered ? "md:ml-1" : "md:-ml-14"
+      className={`mt-3 min-h-[calc(100dvh-1.5rem)] w-full min-w-0 max-w-full rounded-xl border border-border bg-background text-foreground sm:mt-4 sm:rounded-2xl md:mt-6 md:h-[calc(100dvh-1.5rem)] md:overflow-hidden ${
+        isSidebarHovered ? "md:ml-6" : "md:ml-14."
       }`}
       style={{
         transition: "margin 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -396,19 +396,19 @@ export default function NotificationsPage() {
     >
       <div className="mx-auto w-full max-w-3xl space-y-4 px-3 py-4 sm:px-5 sm:py-6 md:space-y-6 md:px-6 md:py-8">
         {/* Header card */}
-        <div className="rounded-xl border border-[#1F1F23] bg-[#0F0F11] px-4 py-4 sm:rounded-2xl sm:px-6 sm:py-5">
+        <div className="rounded-xl border border-border bg-surface px-4 py-4 sm:rounded-2xl sm:px-6 sm:py-5">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#1F1F23] bg-[#121215]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-surface-secondary">
                 <Bell size={18} className="text-[#00AFEF]" />
               </div>
 
               <div className="min-w-0">
-                <h1 className="text-lg font-bold text-white sm:text-xl">
+                <h1 className="text-lg font-bold text-foreground sm:text-xl">
                   Notifications
                 </h1>
 
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted">
                   {totalUnread > 0
                     ? `${totalUnread} unread notification${
                         totalUnread !== 1 ? "s" : ""
@@ -435,7 +435,7 @@ export default function NotificationsPage() {
 
         {/* Tab toolbar */}
         <div className="flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
             <span>
               {currentList.length} notification
               {currentList.length !== 1 ? "s" : ""}
@@ -459,8 +459,9 @@ export default function NotificationsPage() {
 
             {currentUnread > 0 && (
               <button
+                type="button"
                 onClick={handleMarkAllRead}
-                className="flex items-center gap-1.5 rounded-lg border border-[#1F1F23] bg-[#121215] px-3 py-2 text-xs font-medium text-gray-400 transition-colors hover:border-white/10 hover:text-white"
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-muted transition-colors hover:border-[#00AFEF]/40 hover:text-foreground"
               >
                 <CheckCheck size={13} />
                 Mark all read
@@ -474,21 +475,21 @@ export default function NotificationsPage() {
           <div className="flex items-center justify-center py-16 sm:py-20">
             <Loader2
               size={24}
-              className="animate-spin text-purple-500"
+              className="animate-spin text-[#00AFEF]"
             />
           </div>
         ) : currentList.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-4 py-16 text-center sm:py-20">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#1F1F23] bg-[#0F0F11] text-3xl">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-surface text-3xl">
               {TABS.find((tab) => tab.key === activeTab)?.emoji}
             </div>
 
             <div className="space-y-1 px-2">
-              <p className="text-sm font-semibold text-white">
+              <p className="text-sm font-semibold text-foreground">
                 No {activeTab} notifications
               </p>
 
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted">
                 {activeTab === "activity"
                   ? "Activity from likes, follows, and mentions will appear here."
                   : `Notifications related to your ${activeTab} will appear here.`}

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -14,29 +15,33 @@ const CONSEQUENCES = [
 ];
 
 export default function RemoveAccount() {
-  const router  = useRouter();
+  const router = useRouter();
   const [confirmation, setConfirmation] = useState("");
-  const [status,       setStatus]       = useState<"idle" | "loading" | "error">("idle");
-  const [error,        setError]        = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [error, setError] = useState("");
 
   const canDelete = confirmation === "DELETE";
 
   const handleDelete = async () => {
     if (!canDelete) return;
+
     setStatus("loading");
     setError("");
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session) throw new Error("Not authenticated.");
 
-      // Call the Edge Function we deployed
+      // Call the deployed Edge Function
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-account`,
         {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${session.access_token}`,
             "Content-Type": "application/json",
           },
         }
@@ -62,30 +67,42 @@ export default function RemoveAccount() {
   };
 
   return (
-    <div className="space-y-8 p-8">
+    <div className="space-y-8 p-4 sm:p-8">
       {/* Header */}
       <div className="space-y-1">
-        <h2 className="text-xl font-bold text-white">Remove Account</h2>
-        <p className="text-sm text-gray-400">
+        <h2 className="text-xl font-bold text-foreground">
+          Remove Account
+        </h2>
+        <p className="text-sm text-muted">
           Permanently delete your BuildersAfrica account and all associated data.
         </p>
       </div>
 
       {/* Warning card */}
-      <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.04] p-6 space-y-4">
+      <div className="space-y-4 rounded-2xl border border-red-500/20 bg-red-500/5 p-6">
         <div className="flex items-center gap-2">
-          <AlertTriangle size={18} className="text-red-400 shrink-0" />
-          <h3 className="text-sm font-semibold text-red-400">This action is permanent</h3>
+          <AlertTriangle
+            size={18}
+            className="shrink-0 text-red-500"
+            aria-hidden="true"
+          />
+          <h3 className="text-sm font-semibold text-red-500">
+            This action is permanent
+          </h3>
         </div>
 
-        <p className="text-sm text-gray-300 leading-relaxed">
-          Once you delete your account, there is no going back. Please be certain before proceeding.
+        <p className="text-sm leading-relaxed text-foreground">
+          Once you delete your account, there is no going back. Please be
+          certain before proceeding.
         </p>
 
         <ul className="space-y-2">
           {CONSEQUENCES.map((item, i) => (
-            <li key={i} className="flex items-start gap-2.5 text-xs text-gray-400">
-              <span className="mt-1 h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+            <li
+              key={i}
+              className="flex items-start gap-2.5 text-xs text-muted"
+            >
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" />
               {item}
             </li>
           ))}
@@ -93,17 +110,32 @@ export default function RemoveAccount() {
       </div>
 
       {/* Confirmation input */}
-      <div className="rounded-2xl border border-[#1F1F23] bg-[#121215] p-6 space-y-5">
+      <div className="space-y-5 rounded-2xl border border-border bg-surface p-6">
         <div className="flex items-center gap-2">
-          <Trash2 size={16} className="text-red-400" />
-          <h3 className="text-sm font-semibold text-white">Confirm Deletion</h3>
+          <Trash2
+            size={16}
+            className="text-red-500"
+            aria-hidden="true"
+          />
+          <h3 className="text-sm font-semibold text-foreground">
+            Confirm Deletion
+          </h3>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs text-gray-400">
-            Type <span className="font-bold text-red-400 tracking-widest">DELETE</span> to confirm
+          <label
+            htmlFor="delete-confirmation"
+            className="text-xs text-muted"
+          >
+            Type{" "}
+            <span className="font-bold tracking-widest text-red-500">
+              DELETE
+            </span>{" "}
+            to confirm
           </label>
+
           <input
+            id="delete-confirmation"
             type="text"
             value={confirmation}
             onChange={(e) => {
@@ -112,36 +144,51 @@ export default function RemoveAccount() {
               setStatus("idle");
             }}
             placeholder="Type DELETE here"
-            className={`w-full rounded-xl border bg-[#0F0F11] px-4 py-3 text-sm font-mono text-white placeholder:text-white/20 outline-none transition-colors ${
+            autoComplete="off"
+            aria-invalid={!!error}
+            className={`w-full rounded-xl border bg-background px-4 py-3 text-sm font-mono text-foreground placeholder:text-muted outline-none transition-colors ${
               canDelete
                 ? "border-red-500/40 focus:border-red-500/60"
-                : "border-[#1F1F23] focus:border-[#00AFEF]/50"
+                : "border-border focus:border-[#00AFEF]/50"
             }`}
           />
         </div>
 
         {error && (
-          <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-300">
+          <div
+            role="alert"
+            className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-500"
+          >
             {error}
           </div>
         )}
 
         <button
+          type="button"
           onClick={handleDelete}
           disabled={!canDelete || status === "loading"}
-          className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-2.5 text-sm font-semibold text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-2.5 text-sm font-semibold text-red-500 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {status === "loading" ? (
-            <><Loader2 size={14} className="animate-spin" /> Deleting account...</>
+            <>
+              <Loader2 size={14} className="animate-spin" />
+              Deleting account...
+            </>
           ) : (
-            <><Trash2 size={14} /> Permanently Delete Account</>
+            <>
+              <Trash2 size={14} />
+              Permanently Delete Account
+            </>
           )}
         </button>
 
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-muted">
           Need help instead?{" "}
           <button
-            onClick={() => {/* switch to support tab handled by parent */}}
+            type="button"
+            onClick={() => {
+              /* Support tab switching is handled by the parent */
+            }}
             className="text-[#00AFEF] hover:underline"
           >
             Contact support

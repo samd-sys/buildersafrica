@@ -1,3 +1,6 @@
+
+"use client";
+
 import { FileText, Download } from "lucide-react";
 import { isImageType, formatFileSize } from "../types";
 import { useState } from "react";
@@ -24,13 +27,13 @@ export default function FilePreview({
     return (
       <>
         <div
-          className="mt-1 cursor-pointer overflow-hidden rounded-xl border border-white/10 max-w-[240px]"
+          className="mt-1 max-w-[240px] cursor-pointer overflow-hidden rounded-xl border border-border"
           onClick={() => setLightbox(true)}
         >
           <img
             src={fileUrl}
             alt={fileName || "Image"}
-            className="h-full w-full object-cover hover:opacity-90 transition-opacity"
+            className="h-full w-full object-cover transition-opacity hover:opacity-90"
             style={{ maxHeight: 180 }}
           />
         </div>
@@ -38,7 +41,7 @@ export default function FilePreview({
         {/* Lightbox */}
         {lightbox && (
           <div
-            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
             onClick={() => setLightbox(false)}
           >
             <img
@@ -48,8 +51,10 @@ export default function FilePreview({
               onClick={(e) => e.stopPropagation()}
             />
             <button
+              type="button"
               onClick={() => setLightbox(false)}
-              className="absolute top-4 right-4 text-white/60 hover:text-white text-2xl"
+              aria-label="Close image preview"
+              className="absolute right-4 top-4 text-2xl text-white/60 hover:text-white"
             >
               ✕
             </button>
@@ -66,24 +71,28 @@ export default function FilePreview({
       target="_blank"
       rel="noopener noreferrer"
       download={fileName || true}
-      className={`mt-1 flex items-center gap-3 rounded-xl border px-4 py-3 max-w-[280px] transition-colors ${
+      className={`mt-1 flex max-w-[280px] items-center gap-3 rounded-xl border px-4 py-3 transition-colors ${
         isMine
-          ? "border-white/10 bg-white/5 hover:bg-white/10"
-          : "border-[#1F1F23] bg-[#0F0F11] hover:bg-[#1F1F23]"
+          ? "border-border bg-surface-secondary hover:bg-surface"
+          : "border-border bg-surface hover:bg-surface-secondary"
       }`}
     >
-      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#00AFEF]/10 border border-[#00AFEF]/20 shrink-0">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#00AFEF]/20 bg-[#00AFEF]/10">
         <FileText size={16} className="text-[#00AFEF]" />
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-white truncate">
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-medium text-foreground">
           {fileName || "File"}
         </p>
         {fileSize && (
-          <p className="text-[10px] text-gray-500">{formatFileSize(fileSize)}</p>
+          <p className="text-[10px] text-muted">
+            {formatFileSize(fileSize)}
+          </p>
         )}
       </div>
-      <Download size={14} className="text-gray-400 shrink-0" />
+
+      <Download size={14} className="shrink-0 text-muted" />
     </a>
   );
 }

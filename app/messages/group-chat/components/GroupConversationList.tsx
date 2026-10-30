@@ -1,3 +1,4 @@
+
 import { BellOff, Users } from "lucide-react";
 import { GroupConversation, formatGroupTime } from "../groupTypes";
 
@@ -15,9 +16,9 @@ export default function GroupConversationList({
   return (
     <div className="flex-1 overflow-y-auto">
       {conversations.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 py-16 px-4 text-center">
-          <Users size={28} className="text-gray-700" />
-          <p className="text-xs text-gray-500">
+        <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
+          <Users size={28} className="text-muted" />
+          <p className="text-xs text-muted">
             No group chats yet. Join a project team to get started.
           </p>
         </div>
@@ -25,6 +26,7 @@ export default function GroupConversationList({
         conversations.map((conv) => {
           const isActive = activeId === conv.id;
           const last = conv.lastMessage;
+
           const lastText = last
             ? last.deleted_at
               ? "Message deleted"
@@ -38,15 +40,16 @@ export default function GroupConversationList({
           return (
             <button
               key={conv.id}
+              type="button"
               onClick={() => onSelect(conv)}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+              className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
                 isActive
-                  ? "bg-[#00AFEF]/10 border-r-2 border-[#00AFEF]"
-                  : "hover:bg-white/[0.03]"
+                  ? "border-r-2 border-[#00AFEF] bg-[#00AFEF]/10"
+                  : "hover:bg-surface-secondary"
               }`}
             >
               {/* Project logo */}
-              <div className="h-10 w-10 rounded-xl border border-[#27272A] bg-[#18181B] overflow-hidden flex items-center justify-center shrink-0">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-surface-secondary">
                 {conv.projectLogo ? (
                   <img
                     src={conv.projectLogo}
@@ -54,39 +57,49 @@ export default function GroupConversationList({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <span className="text-xs font-black text-white/20">
+                  <span className="text-xs font-black text-muted">
                     {conv.name.slice(0, 2).toUpperCase()}
                   </span>
                 )}
               </div>
 
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <p className={`text-sm font-semibold truncate ${
-                      isActive ? "text-white" : "text-gray-200"
-                    }`}>
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <p
+                      className={`truncate text-sm font-semibold ${
+                        isActive ? "text-foreground" : "text-foreground"
+                      }`}
+                    >
                       {conv.name}
                     </p>
+
                     {conv.isMuted && (
-                      <BellOff size={11} className="text-gray-600 shrink-0" />
+                      <BellOff
+                        size={11}
+                        className="shrink-0 text-muted"
+                      />
                     )}
                   </div>
+
                   {last && (
-                    <span className="text-[10px] text-gray-600 shrink-0">
+                    <span className="shrink-0 text-[10px] text-muted">
                       {formatGroupTime(last.created_at)}
                     </span>
                   )}
                 </div>
+
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs text-gray-500 truncate">{lastText}</p>
+                  <p className="truncate text-xs text-muted">{lastText}</p>
+
                   {conv.unreadCount > 0 && !conv.isMuted && (
-                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#00AFEF] px-1 text-[9px] font-bold text-white shrink-0">
+                    <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-[#00AFEF] px-1 text-[9px] font-bold text-white">
                       {conv.unreadCount > 99 ? "99+" : conv.unreadCount}
                     </span>
                   )}
+
                   {conv.unreadCount > 0 && conv.isMuted && (
-                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-white/10 px-1 text-[9px] font-bold text-gray-500 shrink-0">
+                    <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-surface-secondary px-1 text-[9px] font-bold text-muted">
                       {conv.unreadCount}
                     </span>
                   )}

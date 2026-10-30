@@ -1,3 +1,6 @@
+
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, Mic, ArrowRight, Loader2 } from "lucide-react";
 
@@ -25,11 +28,12 @@ export default function AISearchBar({
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
 
-  // Rotate placeholder examples so people see what kinds of queries work
+  // Rotate placeholder examples
   useEffect(() => {
     const interval = setInterval(() => {
       setPlaceholderIndex((i) => (i + 1) % EXAMPLES.length);
     }, 3000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -45,6 +49,7 @@ export default function AISearchBar({
 
     if (!recognitionRef.current) {
       const recognition = new SpeechRecognition();
+
       recognition.continuous = false;
       recognition.interimResults = false;
       recognition.lang = "en-US";
@@ -53,6 +58,7 @@ export default function AISearchBar({
         const transcript = event.results[0][0].transcript;
         onChange(transcript);
       };
+
       recognition.onend = () => setIsListening(false);
       recognition.onerror = () => setIsListening(false);
 
@@ -65,38 +71,42 @@ export default function AISearchBar({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-1.5 text-xs font-medium text-[#00AFEF] uppercase tracking-wider">
+      <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-[#00AFEF]">
         <Sparkles size={12} />
         AI Search
       </div>
 
-      <div className="flex items-center gap-2 w-full rounded-2xl border border-white/10 bg-[#121215] px-5 py-2 transition-colors focus-within:border-white/10">
+      <div className="flex w-full items-center gap-2 rounded-2xl border border-border bg-surface px-5 py-2 transition-colors focus-within:border-[#00AFEF]">
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && onSearch()}
           placeholder={EXAMPLES[placeholderIndex]}
-          className="flex-1 bg-transparent py-3 text-base text-white  placeholder:text-white/30 outline-none"
+          className="flex-1 bg-transparent py-3 text-base text-foreground placeholder:text-muted outline-none"
         />
 
         <button
+          type="button"
           onClick={handleVoiceSearch}
           title="Voice search"
+          aria-label="Start voice search"
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
             isListening
-              ? "bg-[#00AFEF] text-purple-400 animate-pulse"
-              : "text-white/40 hover:bg-white/5 hover:text-white"
+              ? "animate-pulse bg-[#00AFEF] text-white"
+              : "text-muted hover:bg-surface-secondary hover:text-foreground"
           }`}
         >
           <Mic size={16} />
         </button>
 
         <button
+          type="button"
           onClick={onSearch}
           disabled={isSearching}
           title="Search"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#00AFEF] text-white transition-all hover:bg-white/10 active:scale-95 disabled:opacity-60"
+          aria-label="Search"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#00AFEF] text-white transition-all hover:bg-[#0098D1] active:scale-95 disabled:opacity-60"
         >
           {isSearching ? (
             <Loader2 size={16} className="animate-spin" />

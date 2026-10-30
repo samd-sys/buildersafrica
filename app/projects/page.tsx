@@ -44,7 +44,12 @@ export default function ProjectsPage() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
   const [currentUserId, setCurrentUserId] = useState("");
-  const { toggle } = useProjectEngagement(allProjects, setAllProjects, currentUserId);
+
+  const { toggle } = useProjectEngagement(
+    allProjects,
+    setAllProjects,
+    currentUserId
+  );
 
   useEffect(() => {
     const handleSidebarHover = (event: Event) => {
@@ -100,25 +105,32 @@ export default function ProjectsPage() {
     );
 
     const {
-  data: { user },
-} = await supabase.auth.getUser();
-setCurrentUserId(user?.id ?? "");
+      data: { user },
+    } = await supabase.auth.getUser();
 
-const projectIds = projectsData.map((p: any) => p.id);
-const mine = async (table: string): Promise<Set<string>> => {
-  if (!user) return new Set();
-  const { data } = await supabase
-    .from(table)
-    .select("project_id")
-    .eq("user_id", user.id)
-    .in("project_id", projectIds);
-  return new Set((data ?? []).map((r: { project_id: string }) => r.project_id));
-};
-const [likedSet, followedSet, savedSet] = await Promise.all([
-  mine("project_likes"),
-  mine("project_follows"),
-  mine("project_bookmarks"),
-]);
+    setCurrentUserId(user?.id ?? "");
+
+    const projectIds = projectsData.map((p: any) => p.id);
+
+    const mine = async (table: string): Promise<Set<string>> => {
+      if (!user) return new Set();
+
+      const { data } = await supabase
+        .from(table)
+        .select("project_id")
+        .eq("user_id", user.id)
+        .in("project_id", projectIds);
+
+      return new Set(
+        (data ?? []).map((r: { project_id: string }) => r.project_id)
+      );
+    };
+
+    const [likedSet, followedSet, savedSet] = await Promise.all([
+      mine("project_likes"),
+      mine("project_follows"),
+      mine("project_bookmarks"),
+    ]);
 
     const enriched: Project[] = projectsData.map((p: any) => ({
       ...p,
@@ -187,9 +199,10 @@ const [likedSet, followedSet, savedSet] = await Promise.all([
           new Date(a.created_at).getTime()
       );
     }
+
     if (activeSort === "liked") {
       result.sort((a, b) => b.likes - a.likes);
-   }
+    }
 
     return result;
   }, [allProjects, filters, search, activeSort]);
@@ -197,30 +210,30 @@ const [likedSet, followedSet, savedSet] = await Promise.all([
   const hasActiveFilters = Object.values(filters).some(Boolean);
 
   const openProject = selectedProject
-  ? allProjects.find((p) => p.id === selectedProject.id) ?? null
-  : null;
+    ? allProjects.find((p) => p.id === selectedProject.id) ?? null
+    : null;
 
   return (
-<main
-  className={`mt-3 min-h-[calc(100dvh-1.5rem)] w-full min-w-0 max-w-full rounded-xl border border-white/20 bg-[#09090B] text-white sm:mt-4 sm:rounded-2xl md:mt-6 md:ml-4 md:w-[calc(100%+3rem)] md:max-w-none md:h-[calc(100dvh-1.5rem)] md:overflow-hidden ${
-isSidebarHovered ? "md:ml-14" : "md:ml-[-0rem]"
-  }`}
-  style={{
-    transition: "margin 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-  }}
->
+    <main
+      className={`mt-3 min-h-[calc(100dvh-1.5rem)] w-full min-w-0 max-w-full rounded-xl border border-border bg-background text-foreground sm:mt-4 sm:rounded-2xl md:mt-6 md:ml-4 md:w-[calc(100%+3rem)] md:max-w-none md:h-[calc(100dvh-1.5rem)] md:overflow-hidden ${
+        isSidebarHovered ? "md:ml-6" : "md:ml-14."
+      }`}
+      style={{
+        transition: "margin 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+      }}
+    >
       <div className="mx-auto w-full min-w-0 max-w-[1600px] px-3 py-5 sm:px-5 sm:py-6 md:h-full md:px-6 md:py-8">
 
         {/* Header and search */}
         <section className="space-y-4 sm:space-y-5">
 
           {/* Project header */}
-          <div className="w-full min-w-0 rounded-xl border border-white/20 bg-[#0F0F11] px-4 py-4 sm:rounded-2xl sm:px-6 sm:py-5 md:px-8">
+          <div className="w-full min-w-0 rounded-xl border border-border bg-surface px-4 py-4 sm:rounded-2xl sm:px-6 sm:py-5 md:px-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
 
               {/* Project count */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-xs text-gray-400 sm:text-sm">
-                <span className="font-semibold text-white">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-secondary px-4 py-2 text-xs text-muted sm:text-sm">
+                <span className="font-semibold text-foreground">
                   {allProjects.length}
                 </span>
                 <span>projects</span>
@@ -262,7 +275,7 @@ isSidebarHovered ? "md:ml-14" : "md:ml-[-0rem]"
           </div>
 
           {/* Results count */}
-          <div className="mt-5 flex flex-wrap items-center gap-2 px-1 text-sm text-gray-500 sm:mt-6">
+          <div className="mt-5 flex flex-wrap items-center gap-2 px-1 text-sm text-muted sm:mt-6">
             <FolderOpen size={15} className="shrink-0" />
 
             <span>
@@ -294,31 +307,32 @@ isSidebarHovered ? "md:ml-14" : "md:ml-[-0rem]"
               <div className="flex min-h-64 flex-col items-center justify-center gap-4 px-4 py-12 text-center">
                 <FolderOpen
                   size={44}
-                  className="text-gray-700"
+                  className="text-muted"
                 />
 
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-foreground">
                   No projects found
                 </h2>
 
-                <p className="max-w-xs text-sm leading-6 text-gray-500">
+                <p className="max-w-xs text-sm leading-6 text-muted">
                   Try adjusting your filters or search term.
                 </p>
 
                 <div className="flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row sm:items-center">
                   <button
+                    type="button"
                     onClick={() => {
                       setSearch("");
                       setFilters(EMPTY_FILTERS);
                     }}
-                    className="min-h-11 rounded-full border border-white/10 px-4 py-2 text-sm text-gray-400 transition-colors hover:border-white/20 hover:text-white"
+                    className="min-h-11 rounded-full border border-border px-4 py-2 text-sm text-muted transition-colors hover:bg-surface-secondary hover:text-foreground"
                   >
                     Clear all filters
                   </button>
 
                   <Link
                     href="/new-project"
-                    className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#00AFEF]/30 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#00AFEF]/60"
+                    className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#00AFEF]/30 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-[#00AFEF]/60"
                   >
                     Create Project
                   </Link>
@@ -329,11 +343,11 @@ isSidebarHovered ? "md:ml-14" : "md:ml-[-0rem]"
                 {displayed.map((project) => (
                   <div key={project.id} className="min-w-0">
                     <ProjectCard
-  project={project}
-  onViewMore={setSelectedProject}
-  onToggleLike={(id) => toggle(id, "like")}
-  onToggleBookmark={(id) => toggle(id, "bookmark")}
-/>
+                      project={project}
+                      onViewMore={setSelectedProject}
+                      onToggleLike={(id) => toggle(id, "like")}
+                      onToggleBookmark={(id) => toggle(id, "bookmark")}
+                    />
                   </div>
                 ))}
               </div>
@@ -344,12 +358,12 @@ isSidebarHovered ? "md:ml-14" : "md:ml-[-0rem]"
 
         {/* Project details drawer */}
         <ProjectDrawer
-  project={selectedProject}
-  onClose={() => setSelectedProject(null)}
-  onToggleLike={(id) => toggle(id, "like")}
-  onToggleFollow={(id) => toggle(id, "follow")}
-  onToggleBookmark={(id) => toggle(id, "bookmark")}
-/>
+          project={selectedProject}
+          onClose={() => setSelectedProject(null)}
+          onToggleLike={(id) => toggle(id, "like")}
+          onToggleFollow={(id) => toggle(id, "follow")}
+          onToggleBookmark={(id) => toggle(id, "bookmark")}
+        />
 
       </div>
     </main>

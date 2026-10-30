@@ -7,17 +7,19 @@ import HowItWorks from "./HowItWorks";
 export default function LandingPage() {
   return (
     <main className="relative -mt-1 min-h-screen w-full overflow-x-clip bg-black">
-
       {/* HEADER */}
       <header className="fixed left-1/2 top-3 z-50 flex w-[calc(100%-1rem)] max-w-[750px] -translate-x-1/2 items-center justify-between rounded-3xl border border-white/20 bg-slate-950/90 px-3 py-2 shadow-lg backdrop-blur-md sm:top-6 sm:px-5 sm:py-3 md:px-6">
-
         {/* LOGO AND BRAND */}
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <Link
+          href="/"
+          aria-label="BuildersAfrica home"
+          className="flex min-w-0 items-center gap-2 sm:gap-3"
+        >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl sm:h-14 sm:w-14">
             <img
               src="/B8.png"
               alt="BuildersAfrica Logo"
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain"
             />
           </div>
 
@@ -25,7 +27,7 @@ export default function LandingPage() {
             <span>Builders</span>
             <span className="text-[#00AFEF]">Africa</span>
           </p>
-        </div>
+        </Link>
 
         {/* DIVIDER */}
         <div className="mx-2 hidden h-7 w-px shrink-0 bg-white/30 sm:block md:mx-4" />
@@ -41,7 +43,6 @@ export default function LandingPage() {
 
       {/* HERO */}
       <section className="relative z-10 mx-auto mt-20 w-full max-w-[1150px] overflow-hidden rounded-3xl px-4 py-10 sm:mt-24 sm:px-6 sm:py-12 md:mt-15 md:p-14">
-
         {/* VIDEO BACKGROUND */}
         <video
           autoPlay
@@ -55,11 +56,13 @@ export default function LandingPage() {
         </video>
 
         {/* OVERLAY */}
-        <div className="absolute inset-0 z-0 bg-slate-950/50" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 z-0 bg-slate-950/50"
+        />
 
         {/* CONTENT */}
         <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center gap-10 text-center sm:gap-14 md:gap-20">
-
           <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-[#00AFEF] sm:text-sm sm:tracking-[0.4em]">
             Sign up with confidence
           </p>
@@ -75,13 +78,11 @@ export default function LandingPage() {
           >
             Sign Up Now
           </Link>
-
         </div>
       </section>
 
       {/* HOW IT WORKS */}
       <HowItWorks />
-
     </main>
   );
 }
