@@ -68,7 +68,7 @@ export default function LandingPage() {
           </p>
 
           <h1 className="-mt-3 w-full max-w-4xl text-3xl font-semibold leading-tight text-white sm:text-4xl md:text-6xl">
-            Launch your profile, join teams, and build with Africa&apos;s top
+            Launch your profile, join teams, and build with Africa's top
             creators.
           </h1>
 

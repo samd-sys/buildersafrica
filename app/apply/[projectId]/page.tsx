@@ -4,12 +4,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import {
-  Project,
-  Position,
-  normTeamNeeds,
-  defaultPositionDescription,
-} from "./types";
+import { Project, Position } from "./types";
 import PositionCard from "./components/PositionCard";
 import { ArrowLeft, Loader2, FolderOpen } from "lucide-react";
 import Link from "next/link";
@@ -90,79 +85,17 @@ export default function ApplyProjectPage() {
 
         setProject(proj);
 
-        // Load existing open positions
-        const { data: existingPositions, error: positionsError } =
-          await supabase
-            .from("project_positions")
-            .select("*")
-            .eq("project_id", projectId)
-            .eq("is_open", true)
-            .order("created_at", { ascending: true });
+            // load existing position
+    await supabase.rpc("ensure_project_positions", { p_project_id: projectId });
 
-        if (!isMounted) return;
+    const { data: openPositions } = await supabase
+      .from("project_positions")
+      .select("*")
+      .eq("project_id", projectId)
+      .eq("is_open", true)
+      .order("created_at", { ascending: true });
 
-        if (positionsError) {
-          console.error("Error loading positions:", positionsError);
-        }
-
-        const existing: Position[] = existingPositions || [];
-
-        // Normalize project team needs
-        const teamNeeds = normTeamNeeds(proj.team_needs);
-
-        const existingTitles = new Set(
-          existing.map((position) => position.title.toLowerCase())
-        );
-
-        const missing = teamNeeds.filter(
-          (role: string) => !existingTitles.has(role.toLowerCase())
-        );
-
-        // Automatically create missing positions for the founder
-        if (missing.length > 0 && proj.user_id === user.id) {
-          const toInsert = missing.map((role: string) => ({
-            project_id: projectId,
-            title: role,
-            description: defaultPositionDescription(role, proj.title),
-            is_open: true,
-          }));
-
-          const { data: inserted, error: insertError } = await supabase
-            .from("project_positions")
-            .insert(toInsert)
-            .select("*");
-
-          if (!isMounted) return;
-
-          if (insertError) {
-            console.error("Error generating positions:", insertError);
-            setPositions(existing);
-          } else {
-            setPositions([
-              ...existing,
-              ...((inserted || []) as Position[]),
-            ]);
-          }
-        } else {
-          // Display synthesized positions for non-founders
-          // when no database positions exist
-          if (existing.length === 0 && teamNeeds.length > 0) {
-            const synthesised: Position[] = teamNeeds.map(
-              (role: string, index: number) => ({
-                id: `temp-${index}`,
-                project_id: projectId,
-                title: role,
-                description: defaultPositionDescription(role, proj.title),
-                is_open: true,
-                created_at: new Date().toISOString(),
-              })
-            );
-
-            setPositions(synthesised);
-          } else {
-            setPositions(existing);
-          }
-        }
+    setPositions((openPositions ?? []) as Position[]);
 
         // Load positions the current user has already applied for
         const { data: myApps, error: applicationsError } = await supabase
