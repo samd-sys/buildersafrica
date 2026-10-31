@@ -14,6 +14,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import Link from "next/link";
+import ApplicationFormSkeleton from "../components/ApplicationFormSkeleton";
 
 type FormState = {
   fullName: string;
@@ -334,10 +335,20 @@ export default function ApplicationFormPage() {
     }
   };
 
+  // Skeleton loading screen
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 size={28} className="animate-spin text-[#00AFEF]" />
+      <div
+        className={`transition-all duration-500 ease-in-out ${
+          isSidebarHovered ? "ml-16" : "ml-0"
+        }`}
+        style={{
+          transform: isSidebarHovered ? "scale(1.005)" : "scale(1)",
+          filter: isSidebarHovered ? "brightness(0.98)" : "brightness(1)",
+          transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      >
+        <ApplicationFormSkeleton />
       </div>
     );
   }

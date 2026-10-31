@@ -1,7 +1,7 @@
-
 "use client";
 
 import ProfileEditor from "./components/ProfileEditor";
+import ProfileSkeleton from "./components/ProfileSkeleton";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -89,7 +89,9 @@ export default function Profile() {
   const [regions, setRegions] = useState<Regions>(
     regionsFromList(null)
   );
+
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
 
   // Keep the existing application sidebar hover behavior.
@@ -117,46 +119,57 @@ export default function Profile() {
     let cancelled = false;
 
     async function loadProfile() {
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+      try {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
 
-      if (authError) {
-        console.error("Unable to get authenticated user:", authError);
-        return;
-      }
+        if (authError) {
+          console.error(
+            "Unable to get authenticated user:",
+            authError
+          );
+          return;
+        }
 
-      if (!user) {
-        router.replace("/login");
-        return;
-      }
+        if (!user) {
+          router.replace("/login");
+          return;
+        }
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      if (error) {
-        console.error("Error loading profile:", error);
-        return;
-      }
+        if (error) {
+          console.error("Error loading profile:", error);
+          return;
+        }
 
-      if (data) {
-        setName(data.full_name || "");
-        setBio(data.bio || "");
-        setSkills(normalizeToStringArray(data.skills));
-        setGithub(data.github_url || "");
-        setCountry(data.country || "");
-        setProfessionalTitle(data.professional_title || "");
-        setLinkedin(data.linkedin_url || "");
-        setWebsite(data.website_url || "");
-        setAvatarUrl(data.avatar_url || "");
-        setIsPublic(data.is_public ?? true);
-        setRegions(regionsFromList(data.visible_regions));
+        if (data) {
+          setName(data.full_name || "");
+          setBio(data.bio || "");
+          setSkills(normalizeToStringArray(data.skills));
+          setGithub(data.github_url || "");
+          setCountry(data.country || "");
+          setProfessionalTitle(data.professional_title || "");
+          setLinkedin(data.linkedin_url || "");
+          setWebsite(data.website_url || "");
+          setAvatarUrl(data.avatar_url || "");
+          setIsPublic(data.is_public ?? true);
+          setRegions(regionsFromList(data.visible_regions));
+        }
+      } catch (error) {
+        console.error("Unexpected error loading profile:", error);
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     }
 
@@ -270,6 +283,15 @@ export default function Profile() {
       })
     );
   };
+
+  // Show the profile skeleton while the profile is loading.
+  if (isLoading) {
+    return (
+      <ProfileSkeleton
+        isSidebarHovered={isSidebarHovered}
+      />
+    );
+  }
 
   return (
     <main

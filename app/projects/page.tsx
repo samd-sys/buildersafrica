@@ -8,9 +8,10 @@ import SearchBar from "./components/SearchBar";
 import FilterBar from "./components/FilterBar";
 import ProjectCard from "./components/ProjectCard";
 import ProjectDrawer from "./components/ProjectDrawer";
-import { FolderOpen, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useProjectEngagement } from "./lib/useProjectEngagement";
+import ProjectsSkeleton from "./components/ProjectsSkeleton";
+import { FolderOpen } from "lucide-react";
 
 function normArray(val: unknown): string[] {
   if (!val) return [];
@@ -297,13 +298,8 @@ export default function ProjectsPage() {
           <div className="mt-4 pb-5 sm:mt-6 sm:pb-8">
 
             {loading ? (
-              <div className="flex min-h-48 items-center justify-center">
-                <Loader2
-                  size={28}
-                  className="animate-spin text-[#00AFEF]"
-                />
-              </div>
-            ) : displayed.length === 0 ? (
+  <ProjectsSkeleton />
+) : displayed.length === 0 ? (
               <div className="flex min-h-64 flex-col items-center justify-center gap-4 px-4 py-12 text-center">
                 <FolderOpen
                   size={44}

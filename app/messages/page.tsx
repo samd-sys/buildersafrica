@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -17,6 +16,7 @@ import GroupChatWindow from "./group-chat/components/GroupChatWindow";
 import ChatToggle, { ChatMode } from "./group-chat/components/ChatToggle";
 import { GroupConversation } from "./group-chat/groupTypes";
 import { ArrowLeft, MessageSquare } from "lucide-react";
+import MessagesSkeleton from "./components/MessagesSkeleton";
 
 function MessagesContent() {
   const searchParams = useSearchParams();
@@ -446,6 +446,15 @@ function MessagesContent() {
   const showConversationList = !mobileChatOpen;
   const showChatWindow = mobileChatOpen;
 
+  // Show the skeleton while the initial conversations are loading.
+  if (loading) {
+    return (
+      <MessagesSkeleton
+        isSidebarHovered={isSidebarHovered}
+      />
+    );
+  }
+
   return (
     <main
       className={`mt-3 flex h-[calc(100dvh-1.5rem)] min-h-[32rem] w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-background text-foreground sm:mt-4 sm:rounded-2xl md:mt-6 md:h-[calc(100dvh-1.5rem)] ${
@@ -541,15 +550,11 @@ function MessagesContent() {
 
               <div className="space-y-1">
                 <p className="text-base font-semibold text-foreground sm:text-lg">
-                  {loading
-                    ? "Loading messages..."
-                    : "Select a conversation"}
+                  Select a conversation
                 </p>
 
                 <p className="text-sm text-muted">
-                  {loading
-                    ? "Please wait..."
-                    : mode === "group" && groupConvs.length === 0
+                  {mode === "group" && groupConvs.length === 0
                     ? "No team chats yet. Ask your project founder to create one."
                     : conversations.length === 0 && mode === "private"
                     ? "You have no messages yet. Visit a builder's profile to start a conversation."
@@ -581,11 +586,7 @@ function MessagesContent() {
 export default function MessagesPage() {
   return (
     <Suspense
-      fallback={
-        <div className="mt-3 flex h-[calc(100dvh-1.5rem)] items-center justify-center rounded-xl border border-border bg-background sm:mt-4 md:mt-6">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-[#00AFEF]" />
-        </div>
-      }
+      fallback={<MessagesSkeleton />}
     >
       <MessagesContent />
     </Suspense>

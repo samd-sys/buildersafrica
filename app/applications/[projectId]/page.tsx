@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -6,7 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Application, Project } from "@/app/apply/[projectId]/types";
 import ApplicationCard from "./components/ApplicationCard";
-import { ArrowLeft, Loader2, InboxIcon } from "lucide-react";
+import ApplicationsDashboardSkeleton from "./components/ApplicationsDashboardSkeleton";
+import { ArrowLeft, InboxIcon } from "lucide-react";
 import Link from "next/link";
 
 type Tab = "pending" | "accepted" | "rejected" | "all";
@@ -91,7 +91,10 @@ export default function ApplicationsDashboard() {
         if (!isMounted) return;
 
         if (applicationsError) {
-          console.error("Error loading applications:", applicationsError);
+          console.error(
+            "Error loading applications:",
+            applicationsError
+          );
         }
 
         if (!apps || apps.length === 0) {
@@ -102,7 +105,9 @@ export default function ApplicationsDashboard() {
 
         // Fetch applicant profiles in one batch
         const applicantIds = [
-          ...new Set(apps.map((application: any) => application.applicant_id)),
+          ...new Set(
+            apps.map((application: any) => application.applicant_id)
+          ),
         ];
 
         const { data: profiles, error: profilesError } = await supabase
@@ -113,7 +118,10 @@ export default function ApplicationsDashboard() {
         if (!isMounted) return;
 
         if (profilesError) {
-          console.error("Error loading applicant profiles:", profilesError);
+          console.error(
+            "Error loading applicant profiles:",
+            profilesError
+          );
         }
 
         const profileMap: Record<
@@ -128,17 +136,22 @@ export default function ApplicationsDashboard() {
         // Enrich applications with applicant information
         const enriched: Application[] = apps.map((application: any) => ({
           ...application,
+
           skills: Array.isArray(application.skills)
             ? application.skills
             : [],
+
           portfolio_links: Array.isArray(application.portfolio_links)
             ? application.portfolio_links
             : [],
+
           position_title:
             application.project_positions?.title || "Unknown Position",
+
           applicant_name:
             profileMap[application.applicant_id]?.full_name ||
             application.full_name,
+
           applicant_avatar:
             profileMap[application.applicant_id]?.avatar_url || "",
         }));
@@ -146,7 +159,10 @@ export default function ApplicationsDashboard() {
         setApplications(enriched);
         setLoading(false);
       } catch (error) {
-        console.error("Error loading applications dashboard:", error);
+        console.error(
+          "Error loading applications dashboard:",
+          error
+        );
 
         if (isMounted) {
           setLoading(false);
@@ -232,7 +248,10 @@ export default function ApplicationsDashboard() {
       ]);
 
     if (notificationError) {
-      console.error("Error sending acceptance notification:", notificationError);
+      console.error(
+        "Error sending acceptance notification:",
+        notificationError
+      );
     }
 
     // 5. Update local state
@@ -293,7 +312,10 @@ export default function ApplicationsDashboard() {
       ]);
 
     if (notificationError) {
-      console.error("Error sending rejection notification:", notificationError);
+      console.error(
+        "Error sending rejection notification:",
+        notificationError
+      );
     }
 
     // 4. Update local state
@@ -333,14 +355,20 @@ export default function ApplicationsDashboard() {
     { key: "all", label: "All" },
   ];
 
-  // Loading screen
+  // Skeleton loading screen
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2
-          size={28}
-          className="animate-spin text-[#00AFEF]"
-        />
+      <div
+        className={`min-h-screen bg-background text-foreground transition-all duration-500 ease-in-out ${
+          isSidebarHovered ? "ml-16" : "ml-0"
+        }`}
+        style={{
+          transform: isSidebarHovered ? "scale(1.005)" : "scale(1)",
+          filter: isSidebarHovered ? "brightness(0.98)" : "brightness(1)",
+          transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      >
+        <ApplicationsDashboardSkeleton />
       </div>
     );
   }
@@ -359,7 +387,6 @@ export default function ApplicationsDashboard() {
       }}
     >
       <div className="mx-auto max-w-4xl space-y-6 px-4 py-10">
-
         {/* Back */}
         <Link
           href="/my-projects"

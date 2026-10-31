@@ -12,7 +12,8 @@ import {
 import NotificationCard from "./components/NotificationCard";
 import NotificationTabs from "./components/NotificationTabs";
 import RetentionSelector from "./components/RetentionSelector";
-import { Bell, CheckCheck, Loader2 } from "lucide-react";
+import NotificationsSkeleton from "./components/NotificationsSkeleton";
+import { Bell, CheckCheck } from "lucide-react";
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -394,129 +395,127 @@ export default function NotificationsPage() {
         transition: "margin 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
-      <div className="mx-auto flex w-full max-w-3xl flex-col space-y-4 px-3 py-4 sm:px-5 sm:py-6 md:h-full md:min-h-0 md:space-y-6 md:px-6 md:py-8">
-        {/* Header card */}
-        <div className="shrink-0 rounded-xl border border-border bg-surface px-4 py-4 sm:rounded-2xl sm:px-6 sm:py-5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-surface-secondary">
-                <Bell size={18} className="text-[#00AFEF]" />
+      {loading ? (
+        <NotificationsSkeleton />
+      ) : (
+        <div className="mx-auto flex w-full max-w-3xl flex-col space-y-4 px-3 py-4 sm:px-5 sm:py-6 md:h-full md:min-h-0 md:space-y-6 md:px-6 md:py-8">
+
+          {/* Header card */}
+          <div className="shrink-0 rounded-xl border border-border bg-surface px-4 py-4 sm:rounded-2xl sm:px-6 sm:py-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-surface-secondary">
+                  <Bell size={18} className="text-[#00AFEF]" />
+                </div>
+
+                <div className="min-w-0">
+                  <h1 className="text-lg font-bold text-foreground sm:text-xl">
+                    Notifications
+                  </h1>
+
+                  <p className="text-xs text-muted">
+                    {totalUnread > 0
+                      ? `${totalUnread} unread notification${
+                          totalUnread !== 1 ? "s" : ""
+                        }`
+                      : "You're all caught up"}
+                  </p>
+                </div>
               </div>
 
-              <div className="min-w-0">
-                <h1 className="text-lg font-bold text-foreground sm:text-xl">
-                  Notifications
-                </h1>
-
-                <p className="text-xs text-muted">
-                  {totalUnread > 0
-                    ? `${totalUnread} unread notification${
-                        totalUnread !== 1 ? "s" : ""
-                      }`
-                    : "You're all caught up"}
-                </p>
-              </div>
+              {totalUnread > 0 && (
+                <div className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full border border-purple-500/30 bg-purple-500/20 px-2.5 text-sm font-bold text-purple-400">
+                  {totalUnread > 99 ? "99+" : totalUnread}
+                </div>
+              )}
             </div>
-
-            {totalUnread > 0 && (
-              <div className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full border border-purple-500/30 bg-purple-500/20 px-2.5 text-sm font-bold text-purple-400">
-                {totalUnread > 99 ? "99+" : totalUnread}
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* Tabs */}
-        <div className="shrink-0">
-          <NotificationTabs
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            unreadCounts={unreadCounts}
-          />
-        </div>
+          {/* Tabs */}
+          <div className="shrink-0">
+            <NotificationTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              unreadCounts={unreadCounts}
+            />
+          </div>
 
-        {/* Tab toolbar */}
-        <div className="shrink-0 flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-            <span>
-              {currentList.length} notification
-              {currentList.length !== 1 ? "s" : ""}
-            </span>
-
-            {currentUnread > 0 && (
-              <span className="text-[#00AFEF]">
-                · {currentUnread} unread
+          {/* Tab toolbar */}
+          <div className="shrink-0 flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+              <span>
+                {currentList.length} notification
+                {currentList.length !== 1 ? "s" : ""}
               </span>
-            )}
-          </div>
 
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:gap-3">
-            {activeTab === "activity" && (
-              <RetentionSelector
-                value={retentionDays}
-                onChange={handleRetentionChange}
-                isSaving={isSavingRetention}
-              />
-            )}
-
-            {currentUnread > 0 && (
-              <button
-                type="button"
-                onClick={handleMarkAllRead}
-                className="flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-muted transition-colors hover:border-[#00AFEF]/40 hover:text-foreground"
-              >
-                <CheckCheck size={13} />
-                Mark all read
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Notification list */}
-        <div className="md:min-h-0 md:flex-1 md:overflow-y-auto md:pr-2">
-          {loading ? (
-            <div className="flex items-center justify-center py-16 sm:py-20">
-              <Loader2
-                size={24}
-                className="animate-spin text-[#00AFEF]"
-              />
+              {currentUnread > 0 && (
+                <span className="text-[#00AFEF]">
+                  · {currentUnread} unread
+                </span>
+              )}
             </div>
-          ) : currentList.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-4 py-16 text-center sm:py-20">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-surface text-3xl">
-                {TABS.find((tab) => tab.key === activeTab)?.emoji}
-              </div>
 
-              <div className="space-y-1 px-2">
-                <p className="text-sm font-semibold text-foreground">
-                  No {activeTab} notifications
-                </p>
-
-                <p className="text-xs text-muted">
-                  {activeTab === "activity"
-                    ? "Activity from likes, follows, and mentions will appear here."
-                    : `Notifications related to your ${activeTab} will appear here.`}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {currentList.map((notification) => (
-                <NotificationCard
-                  key={notification.id}
-                  notification={notification}
-                  onRead={markRead}
-                  onDelete={handleDelete}
-                  onAcceptInvite={handleAcceptInvite}
-                  onRejectInvite={handleRejectInvite}
-                  onAcceptApplication={handleAcceptApplication}
-                  onRejectApplication={handleRejectApplication}
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:gap-3">
+              {activeTab === "activity" && (
+                <RetentionSelector
+                  value={retentionDays}
+                  onChange={handleRetentionChange}
+                  isSaving={isSavingRetention}
                 />
-              ))}
+              )}
+
+              {currentUnread > 0 && (
+                <button
+                  type="button"
+                  onClick={handleMarkAllRead}
+                  className="flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-muted transition-colors hover:border-[#00AFEF]/40 hover:text-foreground"
+                >
+                  <CheckCheck size={13} />
+                  Mark all read
+                </button>
+              )}
             </div>
-          )}
+          </div>
+
+          {/* Notification list */}
+          <div className="md:min-h-0 md:flex-1 md:overflow-y-auto md:pr-2">
+            {currentList.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-4 py-16 text-center sm:py-20">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-surface text-3xl">
+                  {TABS.find((tab) => tab.key === activeTab)?.emoji}
+                </div>
+
+                <div className="space-y-1 px-2">
+                  <p className="text-sm font-semibold text-foreground">
+                    No {activeTab} notifications
+                  </p>
+
+                  <p className="text-xs text-muted">
+                    {activeTab === "activity"
+                      ? "Activity from likes, follows, and mentions will appear here."
+                      : `Notifications related to your ${activeTab} will appear here.`}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {currentList.map((notification) => (
+                  <NotificationCard
+                    key={notification.id}
+                    notification={notification}
+                    onRead={markRead}
+                    onDelete={handleDelete}
+                    onAcceptInvite={handleAcceptInvite}
+                    onRejectInvite={handleRejectInvite}
+                    onAcceptApplication={handleAcceptApplication}
+                    onRejectApplication={handleRejectApplication}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </main>
   );
 }

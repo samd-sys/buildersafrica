@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -9,7 +8,8 @@ import TeamHeader from "./components/TeamHeader";
 import MemberList from "./components/MemberList";
 import MemberProfilePanel from "./components/MemberProfilePanel";
 import InviteModal from "./components/InviteModal";
-import { Loader2, ArrowLeft } from "lucide-react";
+import TeamPageSkeleton from "./components/TeamPageSkeleton";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function TeamPage() {
@@ -31,21 +31,13 @@ export default function TeamPage() {
     const handleSidebarHover = (event: Event) => {
       const customEvent = event as CustomEvent;
 
-      setIsSidebarHovered(
-        customEvent.detail.isHovered
-      );
+      setIsSidebarHovered(customEvent.detail.isHovered);
     };
 
-    window.addEventListener(
-      "sidebarHover",
-      handleSidebarHover
-    );
+    window.addEventListener("sidebarHover", handleSidebarHover);
 
     return () => {
-      window.removeEventListener(
-        "sidebarHover",
-        handleSidebarHover
-      );
+      window.removeEventListener("sidebarHover", handleSidebarHover);
     };
   }, []);
 
@@ -75,14 +67,11 @@ export default function TeamPage() {
         setCurrentUserId(user.id);
 
         // Load project
-        const { data: proj, error: projError } =
-          await supabase
-            .from("projects")
-            .select(
-              "id, title, description, logo_url, user_id"
-            )
-            .eq("id", projectId)
-            .single();
+        const { data: proj, error: projError } = await supabase
+          .from("projects")
+          .select("id, title, description, logo_url, user_id")
+          .eq("id", projectId)
+          .single();
 
         if (projError || !proj) {
           router.push("/projects");
@@ -116,18 +105,14 @@ export default function TeamPage() {
         if (!isMounted) return;
 
         // Load team members
-        const { data: teamData, error: teamError } =
-          await supabase
-            .from("team_members")
-            .select("*")
-            .eq("project_id", projectId)
-            .order("joined_at", { ascending: true });
+        const { data: teamData, error: teamError } = await supabase
+          .from("team_members")
+          .select("*")
+          .eq("project_id", projectId)
+          .order("joined_at", { ascending: true });
 
         if (teamError) {
-          console.error(
-            "Failed to load team members:",
-            teamError
-          );
+          console.error("Failed to load team members:", teamError);
 
           setMembers([]);
           return;
@@ -141,9 +126,7 @@ export default function TeamPage() {
         }
 
         // Load member profiles
-        const userIds = teamData.map(
-          (member) => member.user_id
-        );
+        const userIds = teamData.map((member) => member.user_id);
 
         const {
           data: profiles,
@@ -172,53 +155,42 @@ export default function TeamPage() {
         });
 
         // Combine team members with their profiles
-        const enriched: TeamMember[] = teamData.map(
-          (member) => {
-            const profile =
-              profileMap[member.user_id] ?? {};
+        const enriched: TeamMember[] = teamData.map((member) => {
+          const profile = profileMap[member.user_id] ?? {};
 
-            return {
-              id: member.id,
-              user_id: member.user_id,
-              project_id: member.project_id,
-              role: member.role || "Collaborator",
-              status: member.status || "active",
-              joined_at: member.joined_at,
+          return {
+            id: member.id,
+            user_id: member.user_id,
+            project_id: member.project_id,
+            role: member.role || "Collaborator",
+            status: member.status || "active",
+            joined_at: member.joined_at,
 
-              full_name:
-                profile.full_name || "Unnamed Builder",
+            full_name: profile.full_name || "Unnamed Builder",
+            avatar_url: profile.avatar_url || "",
+            professional_title: profile.professional_title || "",
+            country: profile.country || "",
+            bio: profile.bio || "",
 
-              avatar_url: profile.avatar_url || "",
+            skills: Array.isArray(profile.skills)
+              ? profile.skills
+              : typeof profile.skills === "string"
+              ? profile.skills
+                  .split(",")
+                  .map((skill: string) => skill.trim())
+                  .filter(Boolean)
+              : [],
 
-              professional_title:
-                profile.professional_title || "",
-
-              country: profile.country || "",
-              bio: profile.bio || "",
-
-              skills: Array.isArray(profile.skills)
-                ? profile.skills
-                : typeof profile.skills === "string"
-                ? profile.skills
-                    .split(",")
-                    .map((skill: string) => skill.trim())
-                    .filter(Boolean)
-                : [],
-
-              github_url: profile.github_url || "",
-              linkedin_url: profile.linkedin_url || "",
-              website_url: profile.website_url || "",
-              email: "",
-            };
-          }
-        );
+            github_url: profile.github_url || "",
+            linkedin_url: profile.linkedin_url || "",
+            website_url: profile.website_url || "",
+            email: "",
+          };
+        });
 
         setMembers(enriched);
       } catch (error) {
-        console.error(
-          "Failed to load team page:",
-          error
-        );
+        console.error("Failed to load team page:", error);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -236,13 +208,10 @@ export default function TeamPage() {
     // Keep this dependency array fixed.
   }, [projectId]);
 
-  const isFounder =
-    project?.user_id === currentUserId;
+  const isFounder = project?.user_id === currentUserId;
 
   // Remove team member
-  const handleRemoveMember = async (
-    member: TeamMember
-  ) => {
+  const handleRemoveMember = async (member: TeamMember) => {
     const { error } = await supabase
       .from("team_members")
       .delete()
@@ -268,24 +237,20 @@ export default function TeamPage() {
       .eq("user_id", currentUserId)
       .single();
 
-    const { error: notificationError } =
-      await supabase
-        .from("notifications")
-        .insert([
-          {
-            user_id: member.user_id,
-            title: "Removed from Project",
-            message: `${
-              founderProfile?.full_name ||
-              "The founder"
-            } has removed you from the project: ${
-              project?.title
-            }.`,
-            type: "member_removed",
-            related_project_id: projectId,
-            sender_id: currentUserId,
-          },
-        ]);
+    const { error: notificationError } = await supabase
+      .from("notifications")
+      .insert([
+        {
+          user_id: member.user_id,
+          title: "Removed from Project",
+          message: `${
+            founderProfile?.full_name || "The founder"
+          } has removed you from the project: ${project?.title}.`,
+          type: "member_removed",
+          related_project_id: projectId,
+          sender_id: currentUserId,
+        },
+      ]);
 
     if (notificationError) {
       console.error(
@@ -311,9 +276,7 @@ export default function TeamPage() {
 
     setMembers((prev) =>
       prev.map((m) =>
-        m.id === member.id
-          ? { ...m, role: newRole }
-          : m
+        m.id === member.id ? { ...m, role: newRole } : m
       )
     );
 
@@ -324,19 +287,18 @@ export default function TeamPage() {
     );
 
     // Notify member
-    const { error: notificationError } =
-      await supabase
-        .from("notifications")
-        .insert([
-          {
-            user_id: member.user_id,
-            title: "Role Updated",
-            message: `Your role in ${project?.title} has been updated to ${newRole}.`,
-            type: "role_changed",
-            related_project_id: projectId,
-            sender_id: currentUserId,
-          },
-        ]);
+    const { error: notificationError } = await supabase
+      .from("notifications")
+      .insert([
+        {
+          user_id: member.user_id,
+          title: "Role Updated",
+          message: `Your role in ${project?.title} has been updated to ${newRole}.`,
+          type: "role_changed",
+          related_project_id: projectId,
+          sender_id: currentUserId,
+        },
+      ]);
 
     if (notificationError) {
       console.error(
@@ -346,20 +308,20 @@ export default function TeamPage() {
     }
   };
 
-  // Loading screen
+  // Skeleton loading screen
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2
-            size={28}
-            className="animate-spin text-[#00AFEF]"
-          />
-
-          <p className="text-sm text-muted">
-            Loading team...
-          </p>
-        </div>
+      <div
+        className={`mt-6 min-h-[calc(100vh-2rem)] rounded-3xl border border-border bg-background text-foreground transition-all duration-500 ease-in-out ${
+          isSidebarHovered ? "ml-16" : "ml-0"
+        }`}
+        style={{
+          transform: isSidebarHovered ? "scale(1.005)" : "scale(1)",
+          filter: isSidebarHovered ? "brightness(0.98)" : "brightness(1)",
+          transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      >
+        <TeamPageSkeleton />
       </div>
     );
   }
@@ -372,16 +334,13 @@ export default function TeamPage() {
         isSidebarHovered ? "ml-16" : "ml-0"
       }`}
       style={{
-        transform: isSidebarHovered
-          ? "scale(1.005)"
-          : "scale(1)",
+        transform: isSidebarHovered ? "scale(1.005)" : "scale(1)",
 
         filter: isSidebarHovered
           ? "brightness(0.98)"
           : "brightness(1)",
 
-        transition:
-          "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
       <div className="mx-auto max-w-4xl space-y-6 px-4 py-10">
@@ -408,9 +367,7 @@ export default function TeamPage() {
           isFounder={isFounder}
           onViewProfile={setSelectedMember}
           onRemove={handleRemoveMember}
-          onChangeRole={(member) =>
-            setSelectedMember(member)
-          }
+          onChangeRole={(member) => setSelectedMember(member)}
         />
       </div>
 

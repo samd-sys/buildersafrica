@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -18,11 +17,14 @@ import Step9TeamNeeds from "../../new-project/components/steps/Step9TeamNeeds";
 import Step10TechStack from "../../new-project/components/steps/Step10TechStack";
 import Step11Logo from "../../new-project/components/steps/Step11Logo";
 import Step12Vision from "../../new-project/components/steps/Step12Vision";
+import EditProjectSkeleton from "./components/EditProjectSkeleton";
 import { ChevronLeft, Loader2, CheckCircle2 } from "lucide-react";
 
 const TOTAL_STEPS = 11;
 
-function normArray(val: string[] | string | null | undefined): string[] {
+function normArray(
+  val: string[] | string | null | undefined
+): string[] {
   if (!val) return [];
   if (Array.isArray(val)) return val;
 
@@ -48,34 +50,48 @@ function validate(step: number, data: ProjectData): string | null {
   switch (step) {
     case 1:
       return data.title.trim() ? null : "Project name is required.";
+
     case 2:
-      return data.description.trim() ? null : "Please describe your project.";
+      return data.description.trim()
+        ? null
+        : "Please describe your project.";
+
     case 3:
       return data.category ? null : "Please select a category.";
+
     case 4:
       return data.problemStatement.trim()
         ? null
         : "Please describe the problem your project solves.";
+
     case 5:
       return data.targetAudience.length > 0
         ? null
         : "Please select at least one audience.";
+
     case 6:
-      return data.location.trim() ? null : "Please enter your location.";
+      return data.location.trim()
+        ? null
+        : "Please enter your location.";
+
     case 7:
       return data.stage ? null : "Please select your current stage.";
+
     case 8:
       return data.teamNeeds.length > 0
         ? null
         : "Please select at least one role.";
+
     case 9:
       return data.techStack.length > 0
         ? null
         : "Please add at least one technology.";
+
     case 11:
       return data.vision.trim()
         ? null
         : "Please share your long-term vision.";
+
     default:
       return null;
   }
@@ -140,7 +156,9 @@ export default function EditProjectPage() {
         if (!isMounted) return;
 
         if (fetchError || !project) {
-          alert("Project not found or you don't have permission to edit it.");
+          alert(
+            "Project not found or you don't have permission to edit it."
+          );
           router.push("/my-projects");
           return;
         }
@@ -355,14 +373,20 @@ export default function EditProjectPage() {
     }
   };
 
-  // Loading state
+  // Skeleton loading state
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 size={28} className="animate-spin text-[#00AFEF]" />
-          <p className="text-sm text-muted">Loading your project...</p>
-        </div>
+      <div
+        className={`relative mx-auto mt-3 flex min-h-[calc(100dvh-1.5rem)] w-full items-center justify-center overflow-hidden rounded-2xl border border-border bg-background px-3 py-5 transition-all duration-500 ease-in-out sm:mt-4 sm:min-h-[calc(100dvh-2rem)] sm:rounded-3xl sm:px-5 sm:py-8 md:px-8 lg:mt-6 lg:min-h-[540px] lg:ml-[6.25rem] lg:w-[calc(100%-6.25rem)] lg:px-4 lg:py-10 ${
+          isSidebarHovered ? "lg:scale-[1.005]" : "scale-100"
+        }`}
+        style={{
+          transform: isSidebarHovered ? "scale(1.005)" : "scale(1)",
+          filter: isSidebarHovered ? "brightness(0.98)" : "brightness(1)",
+          transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      >
+        <EditProjectSkeleton />
       </div>
     );
   }
@@ -425,7 +449,6 @@ export default function EditProjectPage() {
       }}
     >
       <div className="w-full min-w-0 max-w-2xl space-y-4 sm:space-y-6">
-
         {/* Header */}
         <div className="flex w-full min-w-0 items-center justify-between gap-3">
           <button

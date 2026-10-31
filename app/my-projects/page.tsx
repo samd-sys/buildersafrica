@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,7 +6,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   FolderOpen,
-  Loader2,
   Pencil,
   Trash2,
   AlertTriangle,
@@ -18,6 +16,7 @@ import {
   CheckCircle2,
   ArrowRight,
 } from "lucide-react";
+import MyProjectsSkeleton from "./components/MyProjectsSkeleton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -262,7 +261,7 @@ function ProjectCard({
                 className="flex items-center gap-1.5 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-60"
               >
                 {isDeleting ? (
-                  <Loader2 size={11} className="animate-spin" />
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-red-400/30 border-t-red-400" />
                 ) : (
                   <Trash2 size={11} />
                 )}
@@ -417,7 +416,7 @@ export default function MyProjectsPage() {
       );
   }, []);
 
-  // Load my created projects
+  // Load my created projects.
   const loadMyProjects = async () => {
     setLoading(true);
 
@@ -441,7 +440,7 @@ export default function MyProjectsPage() {
     setLoading(false);
   };
 
-  // Load my applications (pending + accepted only)
+  // Load my applications (pending + accepted only).
   const loadMyApplications = async () => {
     setAppsLoading(true);
 
@@ -485,7 +484,7 @@ export default function MyProjectsPage() {
     loadMyProjects();
   }, []);
 
-  // Load applications when tab is first switched to
+  // Load applications when the applications tab is first opened.
   useEffect(() => {
     if (activeTab === "applications" && applications.length === 0) {
       loadMyApplications();
@@ -596,12 +595,7 @@ export default function MyProjectsPage() {
             {activeTab === "projects" && (
               <>
                 {loading ? (
-                  <div className="flex items-center justify-center py-24">
-                    <Loader2
-                      size={28}
-                      className="animate-spin text-[#00AFEF]"
-                    />
-                  </div>
+                  <MyProjectsSkeleton variant="projects" />
                 ) : projects.length === 0 ? (
                   <div className="flex flex-col items-center justify-center gap-5 py-20 text-center sm:py-28">
                     <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-surface">
@@ -637,12 +631,7 @@ export default function MyProjectsPage() {
             {activeTab === "applications" && (
               <>
                 {appsLoading ? (
-                  <div className="flex items-center justify-center py-24">
-                    <Loader2
-                      size={28}
-                      className="animate-spin text-[#00AFEF]"
-                    />
-                  </div>
+                  <MyProjectsSkeleton variant="applications" />
                 ) : applications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center gap-5 py-20 text-center sm:py-28">
                     <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-surface">

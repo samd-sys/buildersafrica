@@ -6,7 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Project, Position } from "./types";
 import PositionCard from "./components/PositionCard";
-import { ArrowLeft, Loader2, FolderOpen } from "lucide-react";
+import ApplyProjectSkeleton from "./components/ApplyProjectSkeleton";
+import { ArrowLeft, FolderOpen } from "lucide-react";
 import Link from "next/link";
 
 export default function ApplyProjectPage() {
@@ -85,17 +86,24 @@ export default function ApplyProjectPage() {
 
         setProject(proj);
 
-            // load existing position
-    await supabase.rpc("ensure_project_positions", { p_project_id: projectId });
+        // Ensure project positions exist
+        await supabase.rpc("ensure_project_positions", {
+          p_project_id: projectId,
+        });
 
-    const { data: openPositions } = await supabase
-      .from("project_positions")
-      .select("*")
-      .eq("project_id", projectId)
-      .eq("is_open", true)
-      .order("created_at", { ascending: true });
+        if (!isMounted) return;
 
-    setPositions((openPositions ?? []) as Position[]);
+        // Load open positions
+        const { data: openPositions } = await supabase
+          .from("project_positions")
+          .select("*")
+          .eq("project_id", projectId)
+          .eq("is_open", true)
+          .order("created_at", { ascending: true });
+
+        if (!isMounted) return;
+
+        setPositions((openPositions ?? []) as Position[]);
 
         // Load positions the current user has already applied for
         const { data: myApps, error: applicationsError } = await supabase
@@ -140,14 +148,20 @@ export default function ApplyProjectPage() {
 
   const isFounder = project?.user_id === currentUserId;
 
-  // Loading screen
+  // Skeleton loading screen
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2
-          size={28}
-          className="animate-spin text-[#00AFEF]"
-        />
+      <div
+        className={`transition-all duration-500 ease-in-out ${
+          isSidebarHovered ? "ml-16" : "ml-0"
+        }`}
+        style={{
+          transform: isSidebarHovered ? "scale(1.005)" : "scale(1)",
+          filter: isSidebarHovered ? "brightness(0.98)" : "brightness(1)",
+          transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      >
+        <ApplyProjectSkeleton />
       </div>
     );
   }
@@ -162,7 +176,7 @@ export default function ApplyProjectPage() {
       style={{
         transform: isSidebarHovered ? "scale(1.005)" : "scale(1)",
         filter: isSidebarHovered ? "brightness(0.98)" : "brightness(1)",
-        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+        transition: "all 0.4s cubic-bezier(0.4, 0.2, 0.2, 1)",
       }}
     >
       <div className="mx-auto max-w-4xl space-y-8 px-4 py-10">
