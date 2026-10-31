@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Loader2, Mail, Check, AlertCircle } from "lucide-react";
-
+import EmailSettingsSkeleton from "./EmailSettingsSkeleton";
 type EmailNotifications = {
   application_updates: boolean;
   team_invitations: boolean;
@@ -143,12 +143,9 @@ export default function EmailSettings() {
     setTimeout(() => setPrefsSaved(false), 2000);
   };
 
+  // Skeleton loading screen
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 size={24} className="animate-spin text-[#00AFEF]" />
-      </div>
-    );
+    return <EmailSettingsSkeleton />;
   }
 
   return (

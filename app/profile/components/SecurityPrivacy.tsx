@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Shield,
 } from "lucide-react";
+import SecurityPrivacySkeleton from "./SecurityPrivacySkeleton";
 
 export default function SecurityPrivacy() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -161,11 +162,7 @@ export default function SecurityPrivacy() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 size={24} className="animate-spin text-[#00AFEF]" />
-      </div>
-    );
+    return <SecurityPrivacySkeleton />;
   }
 
   return (
