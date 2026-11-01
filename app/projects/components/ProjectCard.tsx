@@ -56,7 +56,7 @@ export default function ProjectCard({
 
         {/* Stage badge */}
         {stage && (
-          <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-white/20 bg-white/90 px-2.5 py-1 text-[12px] font-semibold text-gray-900 backdrop-blur-sm">
+          <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-2.5 py-1 text-[12px] font-semibold text-white backdrop-blur-sm">
             <span>{stage.label}</span>
           </div>
         )}

@@ -223,145 +223,144 @@ export default function ProjectsPage() {
         transition: "margin 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
-      <div className="mx-auto w-full min-w-0 max-w-[1600px] px-3 py-5 sm:px-5 sm:py-6 md:h-full md:px-6 md:py-8">
+      {loading ? (
+        <ProjectsSkeleton />
+      ) : (
+        <div className="mx-auto w-full min-w-0 max-w-[1600px] px-3 py-5 sm:px-5 sm:py-6 md:h-full md:px-6 md:py-8">
 
-        {/* Header and search */}
-        <section className="space-y-4 sm:space-y-5">
+          {/* Header and search */}
+          <section className="space-y-4 sm:space-y-5">
 
-          {/* Project header */}
-          <div className="w-full min-w-0 rounded-xl border border-border bg-surface px-4 py-4 sm:rounded-2xl sm:px-6 sm:py-5 md:px-8">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Project header */}
+            <div className="w-full min-w-0 rounded-xl border border-border bg-surface px-4 py-4 sm:rounded-2xl sm:px-6 sm:py-5 md:px-8">
+              <div className="flex flex-wrap items-center justify-between gap-3">
 
-              {/* Project count */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-secondary px-4 py-2 text-xs text-muted sm:text-sm">
-                <span className="font-semibold text-foreground">
-                  {allProjects.length}
-                </span>
-                <span>projects</span>
+                {/* Project count */}
+                <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-secondary px-4 py-2 text-xs text-muted sm:text-sm">
+                  <span className="font-semibold text-foreground">
+                    {allProjects.length}
+                  </span>
+                  <span>projects</span>
+                </div>
+
+                {/* New project */}
+                <Link
+                  href="/new-project"
+                  className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-full bg-[#00AFEF]/50 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#00AFEF]/70 sm:text-sm"
+                >
+                  <span aria-hidden="true">+</span>
+                  New Project
+                </Link>
+
               </div>
+            </div>
 
-              {/* New project */}
-              <Link
-                href="/new-project"
-                className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-full bg-[#00AFEF]/50 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#00AFEF]/70 sm:text-sm"
-              >
-                <span aria-hidden="true">+</span>
-                New Project
-              </Link>
+            {/* Search */}
+            <div className="w-full min-w-0">
+              <SearchBar
+                value={search}
+                onChange={setSearch}
+              />
+            </div>
+
+          </section>
+
+          {/* Filters and results */}
+          <section className="mt-5 min-w-0 md:mt-6 md:h-[calc(100%-150px)] md:overflow-y-auto md:overscroll-contain md:pr-2">
+
+            {/* Filters */}
+            <div className="w-full min-w-0">
+              <FilterBar
+                filters={filters}
+                onFiltersChange={setFilters}
+                activeSort={activeSort}
+                onSortChange={setActiveSort}
+              />
+            </div>
+
+            {/* Results count */}
+            <div className="mt-5 flex flex-wrap items-center gap-2 px-1 text-sm text-muted sm:mt-6">
+              <FolderOpen size={15} className="shrink-0" />
+
+              <span>
+                {displayed.length} project
+                {displayed.length !== 1 ? "s" : ""} found
+              </span>
+
+              {hasActiveFilters && (
+                <span className="text-xs text-[#00AFEF]">
+                  (filtered)
+                </span>
+              )}
+            </div>
+
+            {/* Project grid */}
+            <div className="mt-4 pb-5 sm:mt-6 sm:pb-8">
+
+              {displayed.length === 0 ? (
+                <div className="flex min-h-64 flex-col items-center justify-center gap-4 px-4 py-12 text-center">
+                  <FolderOpen
+                    size={44}
+                    className="text-muted"
+                  />
+
+                  <h2 className="text-lg font-semibold text-foreground">
+                    No projects found
+                  </h2>
+
+                  <p className="max-w-xs text-sm leading-6 text-muted">
+                    Try adjusting your filters or search term.
+                  </p>
+
+                  <div className="flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row sm:items-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearch("");
+                        setFilters(EMPTY_FILTERS);
+                      }}
+                      className="min-h-11 rounded-full border border-border px-4 py-2 text-sm text-muted transition-colors hover:bg-surface-secondary hover:text-foreground"
+                    >
+                      Clear all filters
+                    </button>
+
+                    <Link
+                      href="/new-project"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#00AFEF]/30 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-[#00AFEF]/60"
+                    >
+                      Create Project
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3 xl:gap-6">
+                  {displayed.map((project) => (
+                    <div key={project.id} className="min-w-0">
+                      <ProjectCard
+                        project={project}
+                        onViewMore={setSelectedProject}
+                        onToggleLike={(id) => toggle(id, "like")}
+                        onToggleBookmark={(id) => toggle(id, "bookmark")}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
 
             </div>
-          </div>
+          </section>
 
-          {/* Search */}
-          <div className="w-full min-w-0">
-            <SearchBar
-              value={search}
-              onChange={setSearch}
-            />
-          </div>
+          {/* Project details drawer */}
+          <ProjectDrawer
+            project={selectedProject}
+            onClose={() => setSelectedProject(null)}
+            onToggleLike={(id) => toggle(id, "like")}
+            onToggleFollow={(id) => toggle(id, "follow")}
+            onToggleBookmark={(id) => toggle(id, "bookmark")}
+          />
 
-        </section>
-
-        {/* Filters and results */}
-        <section className="mt-5 min-w-0 md:mt-6 md:h-[calc(100%-150px)] md:overflow-y-auto md:overscroll-contain md:pr-2">
-
-          {/* Filters */}
-          <div className="w-full min-w-0">
-            <FilterBar
-              filters={filters}
-              onFiltersChange={setFilters}
-              activeSort={activeSort}
-              onSortChange={setActiveSort}
-            />
-          </div>
-
-          {/* Results count */}
-          <div className="mt-5 flex flex-wrap items-center gap-2 px-1 text-sm text-muted sm:mt-6">
-            <FolderOpen size={15} className="shrink-0" />
-
-            <span>
-              {loading
-                ? "Loading projects..."
-                : `${displayed.length} project${
-                    displayed.length !== 1 ? "s" : ""
-                  } found`}
-            </span>
-
-            {hasActiveFilters && !loading && (
-              <span className="text-xs text-[#00AFEF]">
-                (filtered)
-              </span>
-            )}
-          </div>
-
-          {/* Project grid */}
-          <div className="mt-4 pb-5 sm:mt-6 sm:pb-8">
-
-            {loading ? (
-  <ProjectsSkeleton />
-) : displayed.length === 0 ? (
-              <div className="flex min-h-64 flex-col items-center justify-center gap-4 px-4 py-12 text-center">
-                <FolderOpen
-                  size={44}
-                  className="text-muted"
-                />
-
-                <h2 className="text-lg font-semibold text-foreground">
-                  No projects found
-                </h2>
-
-                <p className="max-w-xs text-sm leading-6 text-muted">
-                  Try adjusting your filters or search term.
-                </p>
-
-                <div className="flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row sm:items-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearch("");
-                      setFilters(EMPTY_FILTERS);
-                    }}
-                    className="min-h-11 rounded-full border border-border px-4 py-2 text-sm text-muted transition-colors hover:bg-surface-secondary hover:text-foreground"
-                  >
-                    Clear all filters
-                  </button>
-
-                  <Link
-                    href="/new-project"
-                    className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#00AFEF]/30 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-[#00AFEF]/60"
-                  >
-                    Create Project
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3 xl:gap-6">
-                {displayed.map((project) => (
-                  <div key={project.id} className="min-w-0">
-                    <ProjectCard
-                      project={project}
-                      onViewMore={setSelectedProject}
-                      onToggleLike={(id) => toggle(id, "like")}
-                      onToggleBookmark={(id) => toggle(id, "bookmark")}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
-          </div>
-        </section>
-
-        {/* Project details drawer */}
-        <ProjectDrawer
-          project={selectedProject}
-          onClose={() => setSelectedProject(null)}
-          onToggleLike={(id) => toggle(id, "like")}
-          onToggleFollow={(id) => toggle(id, "follow")}
-          onToggleBookmark={(id) => toggle(id, "bookmark")}
-        />
-
-      </div>
+        </div>
+      )}
     </main>
   );
 }
