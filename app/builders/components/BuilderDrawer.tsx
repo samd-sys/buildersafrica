@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   X,
   User,
@@ -14,6 +14,9 @@ import {
   Loader2,
   Check,
   MessageSquare,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
 } from "lucide-react";
 import { Builder, ConnectionStatus } from "../types/builder";
 import { countryToFlag } from "../lib/countryFlag";
@@ -33,20 +36,116 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
   const [inviteDone, setInviteDone] = useState(false);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
 
+  // Profile picture viewer
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+
+  const dragStart = useRef({ x: 0, y: 0 });
+  const imagePositionStart = useRef({ x: 0, y: 0 });
+
   useEffect(() => {
     if (!builder) return;
+
     setInviteDone(false);
     loadConnectionStatus();
   }, [builder?.user_id]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (imageViewerOpen) {
+          closeImageViewer();
+        } else {
+          onClose();
+        }
+      }
     };
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, imageViewerOpen]);
+
+  // Prevent background scrolling while the image viewer is open
+  useEffect(() => {
+    if (!imageViewerOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [imageViewerOpen]);
+
+  const closeImageViewer = () => {
+    setImageViewerOpen(false);
+    setZoom(1);
+    setPosition({ x: 0, y: 0 });
+    setIsDragging(false);
+  };
+
+  const openImageViewer = () => {
+    if (!builder?.avatar_url) return;
+
+    setZoom(1);
+    setPosition({ x: 0, y: 0 });
+    setImageViewerOpen(true);
+  };
+
+  const changeZoom = (amount: number) => {
+    setZoom((current) => {
+      const next = Math.min(4, Math.max(1, current + amount));
+
+      if (next === 1) {
+        setPosition({ x: 0, y: 0 });
+      }
+
+      return next;
+    });
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+
+    setZoom((current) => {
+      const next = Math.min(
+        4,
+        Math.max(1, current + (e.deltaY < 0 ? 0.2 : -0.2))
+      );
+
+      if (next === 1) {
+        setPosition({ x: 0, y: 0 });
+      }
+
+      return next;
+    });
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLImageElement>) => {
+    if (zoom <= 1) return;
+
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    imagePositionStart.current = position;
+    setIsDragging(true);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLImageElement>) => {
+    if (!isDragging) return;
+
+    setPosition({
+      x: imagePositionStart.current.x + e.clientX - dragStart.current.x,
+      y: imagePositionStart.current.y + e.clientY - dragStart.current.y,
+    });
+  };
+
+  const handlePointerUp = () => {
+    setIsDragging(false);
+  };
 
   const loadConnectionStatus = async () => {
     const {
@@ -225,15 +324,36 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
             <>
               {/* Profile header */}
               <div className="flex flex-col items-center gap-3 text-center">
-                <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-surface-secondary">
-                  {builder.avatar_url ? (
-                    <img
-                      src={builder.avatar_url}
-                      alt={builder.full_name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <User size={36} className="text-muted" />
+
+                {/* Clickable profile picture */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={openImageViewer}
+                    disabled={!builder.avatar_url}
+                    aria-label={`View ${builder.full_name}'s profile picture`}
+                    className="group relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-surface-secondary transition-all hover:border-[#00AFEF] disabled:cursor-default"
+                  >
+                    {builder.avatar_url ? (
+                      <>
+                        <img
+                          src={builder.avatar_url}
+                          alt={builder.full_name}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition-all group-hover:bg-black/35 group-hover:opacity-100">
+                          <ZoomIn size={24} />
+                        </span>
+                      </>
+                    ) : (
+                      <User size={36} className="text-muted" />
+                    )}
+                  </button>
+
+                  {builder.avatar_url && (
+                    <span className="mt-1 block text-[10px] text-muted">
+                      Click to enlarge
+                    </span>
                   )}
                 </div>
 
@@ -405,6 +525,101 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
           )}
         </div>
       </div>
+
+      {/* Profile picture zoom viewer */}
+      {imageViewerOpen && builder?.avatar_url && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          onClick={closeImageViewer}
+        >
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={closeImageViewer}
+            aria-label="Close image viewer"
+            className="absolute right-4 top-4 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white transition-colors hover:bg-white/20"
+          >
+            <X size={22} />
+          </button>
+
+          {/* Image controls */}
+          <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-black/70 p-2 shadow-xl">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                changeZoom(-0.25);
+              }}
+              disabled={zoom <= 1}
+              aria-label="Zoom out"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/20 disabled:opacity-40"
+            >
+              <ZoomOut size={19} />
+            </button>
+
+            <span className="min-w-12 text-center text-xs font-medium text-white">
+              {Math.round(zoom * 100)}%
+            </span>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                changeZoom(0.25);
+              }}
+              disabled={zoom >= 4}
+              aria-label="Zoom in"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/20 disabled:opacity-40"
+            >
+              <ZoomIn size={19} />
+            </button>
+
+            <div className="mx-1 h-6 w-px bg-white/20" />
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoom(1);
+                setPosition({ x: 0, y: 0 });
+              }}
+              aria-label="Reset zoom"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/20"
+            >
+              <RotateCcw size={17} />
+            </button>
+          </div>
+
+          {/* Image display */}
+          <div
+            className="flex h-full w-full items-center justify-center overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            onWheel={handleWheel}
+          >
+            <img
+              src={builder.avatar_url}
+              alt={`${builder.full_name}'s profile picture`}
+              draggable={false}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+              className={`max-h-[85vh] max-w-[90vw] select-none rounded-lg object-contain shadow-2xl ${
+                isDragging ? "cursor-grabbing" : zoom > 1 ? "cursor-grab" : "cursor-zoom-in"
+              }`}
+              style={{
+                transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
+                transition: isDragging ? "none" : "transform 0.2s ease",
+                touchAction: "none",
+              }}
+            />
+          </div>
+
+          <p className="absolute bottom-20 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-white/60">
+            Scroll to zoom · Drag to move · Esc to close
+          </p>
+        </div>
+      )}
 
       {builder && (
         <SendMessageModal

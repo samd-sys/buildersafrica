@@ -1,7 +1,11 @@
-
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Upload, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import FreeCropModal from "@/components/FreeCropModal";
+import {
+  ACCEPT_IMAGE_TYPES,
+  validateImageFile,
+} from "@/components/imageFile";
 
 type Props = {
   value: string;
@@ -10,15 +14,50 @@ type Props = {
 
 export default function Step11Logo({ value, onChange }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const previewRef = useRef<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pickError, setPickError] = useState<string | null>(null);
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Release the last blob URL when the step goes away
+  useEffect(() => {
+    return () => {
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    };
+  }, []);
+
+  // Show a file instantly via a blob URL (or clear the preview with null)
+  const showPreview = (file: File | null) => {
+    if (previewRef.current) {
+      URL.revokeObjectURL(previewRef.current);
+      previewRef.current = null;
+    }
+    if (file) previewRef.current = URL.createObjectURL(file);
+    setLocalPreview(previewRef.current);
+  };
+
+  const handlePick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // Reset so picking the same file again still fires onChange
+    e.target.value = "";
     if (!file) return;
 
-    const objectUrl = URL.createObjectURL(file);
-    setLocalPreview(objectUrl);
+    const problem = validateImageFile(file);
+    if (problem) {
+      setPickError(problem);
+      return;
+    }
+    setPickError(null);
+    setPendingFile(file);
+  };
+
+  const handleCancel = useCallback(() => setPendingFile(null), []);
+
+  // Called with the cropped PNG (longest side up to 512px)
+  const handleConfirm = async (cropped: File) => {
+    setPendingFile(null);
+    showPreview(cropped);
     setIsUploading(true);
 
     const {
@@ -27,19 +66,20 @@ export default function Step11Logo({ value, onChange }: Props) {
 
     if (!user) {
       alert("You must be logged in.");
+      showPreview(null);
       setIsUploading(false);
       return;
     }
 
-    const ext = file.name.split(".").pop();
-    const path = `project-logos/${user.id}-${Date.now()}.${ext}`;
+    const path = `project-logos/${user.id}-${Date.now()}.png`;
 
     const { error } = await supabase.storage
       .from("avatars")
-      .upload(path, file, { upsert: true });
+      .upload(path, cropped, { upsert: true });
 
     if (error) {
       alert(error.message);
+      showPreview(null); // don't keep showing a logo that wasn't saved
       setIsUploading(false);
       return;
     }
@@ -50,13 +90,12 @@ export default function Step11Logo({ value, onChange }: Props) {
 
     onChange(publicUrl);
     setIsUploading(false);
-    e.target.value = "";
   };
 
   const displayUrl = localPreview || value;
 
   const clear = () => {
-    setLocalPreview(null);
+    showPreview(null);
     onChange("");
   };
 
@@ -74,8 +113,8 @@ export default function Step11Logo({ value, onChange }: Props) {
       <input
         ref={fileRef}
         type="file"
-        accept="image/*"
-        onChange={handleFile}
+        accept={ACCEPT_IMAGE_TYPES}
+        onChange={handlePick}
         className="hidden"
       />
 
@@ -131,10 +170,14 @@ export default function Step11Logo({ value, onChange }: Props) {
               Click to upload a logo
             </p>
             <p className="text-xs text-muted">
-              PNG, JPG, or SVG — max 2MB
+              PNG, JPG or WebP — you can crop it after choosing
             </p>
           </div>
         </button>
+      )}
+
+      {pickError && (
+        <p className="text-center text-xs text-red-500">{pickError}</p>
       )}
 
       <button
@@ -145,6 +188,14 @@ export default function Step11Logo({ value, onChange }: Props) {
       >
         Skip for now →
       </button>
+
+      <FreeCropModal
+        file={pendingFile}
+        title="Crop your project logo"
+        fileName="logo.png"
+        onCancel={handleCancel}
+        onConfirm={handleConfirm}
+      />
     </div>
   );
 }

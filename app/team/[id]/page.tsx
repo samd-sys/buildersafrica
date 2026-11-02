@@ -260,29 +260,43 @@ export default function TeamPage() {
     }
   };
 
-  // Change member role
-  const handleChangeRole = async (
-    member: TeamMember,
-    newRole: string
-  ) => {
-    const { error } = await supabase
+  
+// Change member role
+const handleChangeRole = async (
+  member: TeamMember,
+  newRole: string
+) => {
+  try {
+    // Update the role in Supabase and return the updated record
+    const { data, error } = await supabase
       .from("team_members")
       .update({ role: newRole })
-      .eq("id", member.id);
+      .eq("id", member.id)
+      .select("id, role")
+      .maybeSingle();
 
     if (error) {
+      console.error("Role update failed:", error);
       throw error;
     }
 
+    // Check whether Supabase actually updated a record
+    if (!data) {
+      throw new Error(
+        "Role was not saved. No matching team member was updated. Check your Supabase RLS policies."
+      );
+    }
+
+    // Update frontend state only after database confirmation
     setMembers((prev) =>
       prev.map((m) =>
-        m.id === member.id ? { ...m, role: newRole } : m
+        m.id === member.id ? { ...m, role: data.role } : m
       )
     );
 
     setSelectedMember((prev) =>
       prev?.id === member.id
-        ? { ...prev, role: newRole }
+        ? { ...prev, role: data.role }
         : prev
     );
 
@@ -306,7 +320,15 @@ export default function TeamPage() {
         notificationError
       );
     }
-  };
+  } catch (error) {
+    console.error("Failed to change member role:", error);
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Unable to update member role."
+    );
+  }
+};
 
   // Skeleton loading screen
   if (loading) {
