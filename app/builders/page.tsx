@@ -51,9 +51,10 @@ export default function Builders() {
       const { country, keywords } = parseSearchQuery(rawQuery);
 
       let query = supabase
-        .from("profiles")
-        .select("*")
-        .neq("user_id", user?.id ?? "");
+  .from("profiles")
+  .select("*")
+  .eq("is_public", "true")
+  .neq("user_id", user?.id ?? "");
 
       // Country filter
       if (country) {

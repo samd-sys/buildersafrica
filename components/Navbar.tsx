@@ -26,6 +26,7 @@ export default function Navbar() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
   const [dmUnreadCount, setDmUnreadCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Notify other components when the desktop sidebar expands or collapses
   useEffect(() => {
@@ -148,9 +149,23 @@ export default function Navbar() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user || cancelled) return;
+      if (!user || cancelled) {
+        setIsAdmin(false);
+        return;
+      }
 
       const userId = user.id;
+
+      // Check administrator membership
+      const { data: adminRecord, error: adminError } = await supabase
+        .from("support_admins")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!cancelled) {
+        setIsAdmin(!adminError && !!adminRecord);
+      }
 
       // Notification badge updates
       notifChannel = supabase
@@ -218,6 +233,9 @@ export default function Navbar() {
     return null;
   }
 
+  // Dashboard destination based on administrator membership
+  const dashboardHref = isAdmin ? "/dashboard/admin" : "/projects";
+
   // Main navigation items
   const navItems = [
     {
@@ -273,8 +291,15 @@ export default function Navbar() {
       >
         {/* Top Section */}
         <div>
-          {/* Logo */}
-          <div className="mb-12 flex items-center gap-4 px-3">
+          {/* Clickable Logo */}
+          <Link
+            href={dashboardHref}
+            aria-label={
+              isAdmin ? "Open Admin Dashboard" : "Open Projects"
+            }
+            title={isAdmin ? "Admin Dashboard" : "Projects"}
+            className="mb-12 flex items-center gap-4 px-3"
+          >
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#00AFEF]/10">
               <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl">
                 <img
@@ -291,7 +316,7 @@ export default function Navbar() {
                 <span className="text-[#00AFEF]">Africa</span>
               </h1>
             </div>
-          </div>
+          </Link>
 
           {/* Main Navigation */}
           <div className="space-y-2">
@@ -428,7 +453,15 @@ export default function Navbar() {
           <nav className="relative z-10 flex h-full w-[260px] max-w-[85vw] flex-col overflow-y-auto border-r border-border bg-sidebar p-4 text-foreground">
             {/* Mobile Header */}
             <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              {/* Clickable Mobile Logo */}
+              <Link
+                href={dashboardHref}
+                onClick={() => setMobileOpen(false)}
+                aria-label={
+                  isAdmin ? "Open Admin Dashboard" : "Open Projects"
+                }
+                className="flex items-center gap-3"
+              >
                 <img
                   src="/B8.png"
                   alt="BuildersAfrica Logo"
@@ -439,7 +472,7 @@ export default function Navbar() {
                   Builders
                   <span className="text-[#00AFEF]">Africa</span>
                 </h2>
-              </div>
+              </Link>
 
               <button
                 type="button"

@@ -98,16 +98,17 @@ export default function SupportCenter() {
       return;
     }
 
-    const { error: insertError } = await supabase
-      .from("support_tickets")
-      .insert([
-        {
-          user_id: user.id,
-          subject,
-          message: message.trim(),
-          status: "open",
-        },
-      ]);
+const { error: insertError } = await supabase
+  .from("support_tickets")
+  .insert([
+    {
+      user_id: user.id,
+      user_email: user.email ?? null,
+      subject,
+      message: message.trim(),
+      status: "open",
+    },
+  ]);
 
     if (insertError) {
       setError("Failed to submit ticket. Please try again.");
