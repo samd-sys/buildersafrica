@@ -6,6 +6,7 @@ import EmailSettings from "./EmailSettings";
 import SecurityPrivacy from "./SecurityPrivacy";
 import SupportCenter from "./SupportCenter";
 import RemoveAccount from "./RemoveAccount";
+import { useEffect } from "react";
 import { ProfileData, ProfileSetters, RegionKey } from "../types/profile";
 import {
   User,
@@ -56,8 +57,19 @@ export default function ProfileEditor({
   onAvatarFileSelected,
   isSaving = false,
 }: ProfileEditorProps) {
-  const [activeTab, setActiveTab] = useState<TabKey>("profile");
-  const [showVisibilitySettings, setShowVisibilitySettings] = useState(false);
+const [activeTab, setActiveTab] = useState<TabKey>("profile");
+
+useEffect(() => {
+  const handleOpenSupport = () => {
+    setActiveTab("support");
+  };
+
+  window.addEventListener("openSupportCenter", handleOpenSupport);
+
+  return () => {
+    window.removeEventListener("openSupportCenter", handleOpenSupport);
+  };
+}, []);  const [showVisibilitySettings, setShowVisibilitySettings] = useState(false);
 
   const toggleRegion = (regionKey: RegionKey) => {
     setters.setRegions((prev) => ({

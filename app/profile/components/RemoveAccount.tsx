@@ -5,6 +5,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import Link from "next/link";
 
 const CONSEQUENCES = [
   "All your projects and their data will be permanently deleted",
@@ -110,7 +111,7 @@ export default function RemoveAccount() {
       </div>
 
       {/* Confirmation input */}
-      <div className="space-y-5 rounded-2xl border border-border bg-surface p-6">
+      <div className="space-y-5 rounded-2xl border border-red-900 bg-surface p-6">
         <div className="flex items-center gap-2">
           <Trash2
             size={16}
@@ -146,10 +147,10 @@ export default function RemoveAccount() {
             placeholder="Type DELETE here"
             autoComplete="off"
             aria-invalid={!!error}
-            className={`w-full rounded-xl border bg-background px-4 py-3 text-sm font-mono text-foreground placeholder:text-muted outline-none transition-colors ${
+            className={`w-full rounded-xl border bg-background px-4 py-3 text-sm font-mono text-foreground placeholder:text-white/10 outline-none transition-colors ${
               canDelete
                 ? "border-red-500/40 focus:border-red-500/60"
-                : "border-border focus:border-[#00AFEF]/50"
+                : "border-border focus:border-white/10"
             }`}
           />
         </div>
@@ -183,17 +184,17 @@ export default function RemoveAccount() {
         </button>
 
         <p className="text-xs text-muted">
-          Need help instead?{" "}
-          <button
+            Need help instead?{" "}
+           <button
             type="button"
-            onClick={() => {
-              /* Support tab switching is handled by the parent */
+           onClick={() => {
+            window.dispatchEvent(new Event("openSupportCenter"));
             }}
-            className="text-[#00AFEF] hover:underline"
-          >
-            Contact support
-          </button>
-        </p>
+          className="text-[#00AFEF] hover:underline"
+         >
+          Contact support
+        </button>
+         </p>
       </div>
     </div>
   );
