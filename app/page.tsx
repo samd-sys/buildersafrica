@@ -6,7 +6,7 @@ import HowItWorks from "./HowItWorks";
 
 export default function LandingPage() {
   return (
-    <main className="relative -mt-1 min-h-screen w-full overflow-x-clip bg-black">
+    <main className="relative -mt-1 min-h-screen w-full overflow-x-clip">
       {/* HEADER */}
       <header className="fixed left-1/2 top-3 z-50 flex w-[calc(100%-1rem)] max-w-[750px] -translate-x-1/2 items-center justify-between rounded-3xl border border-white/20 bg-slate-950/90 px-3 py-2 shadow-lg backdrop-blur-md sm:top-6 sm:px-5 sm:py-3 md:px-6">
         {/* LOGO AND BRAND */}
