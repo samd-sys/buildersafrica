@@ -616,7 +616,6 @@ export default function BuilderDrawer({ builder, onClose }: Props) {
           </div>
 
           <p className="absolute bottom-20 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-white/60">
-            Scroll to zoom · Drag to move · Esc to close
           </p>
         </div>
       )}
