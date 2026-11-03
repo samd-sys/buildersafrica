@@ -484,6 +484,8 @@ export default function Signup() {
                   placeholder="Re-enter your password"
                   value={form.confirmPassword}
                   onChange={handleChange}
+                  onPaste={(e) => e.preventDefault()}
+                  onCopy={(e) => e.preventDefault()}
                   maxLength={MAX_PASS_LENGTH}
                   autoComplete="new-password"
                   required
