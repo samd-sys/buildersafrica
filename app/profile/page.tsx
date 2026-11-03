@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Regions, REGION_KEYS, RegionKey } from "./types/profile";
+import { toast } from "sonner";
 
 function regionsFromList(list: unknown): Regions {
   const base = REGION_KEYS.reduce(
@@ -222,7 +223,8 @@ export default function Profile() {
         return;
       }
 
-      alert("Profile saved successfully!");
+      toast.success("Profile Saved Successfully", {
+    });
     } catch (error) {
       console.error("Error saving profile:", error);
       alert("An unexpected error occurred while saving your profile.");
