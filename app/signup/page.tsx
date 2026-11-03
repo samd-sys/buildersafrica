@@ -298,17 +298,6 @@ export default function Signup() {
 
       {/* Signup form */}
       <div className="relative flex flex-1 items-center justify-center px-4 py-8 sm:px-6 sm:py-12">
-        {/* Background grid */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-20"
-          style={{
-            backgroundImage:
-              "linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-          }}
-        />
-
         <section className="relative z-10 w-full max-w-xl rounded-2xl border border-border bg-surface p-4 shadow-2xl sm:rounded-3xl sm:p-7 md:p-9">
           <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">
             Sign up to BuildersAfrica

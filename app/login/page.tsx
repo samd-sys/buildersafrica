@@ -135,18 +135,6 @@ export default function Login() {
 
   return (
     <main className="relative flex min-h-screen w-full max-w-full flex-col overflow-x-clip bg-background text-foreground">
-
-      {/* GRID BACKGROUND */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.07]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(128,128,128,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(128,128,128,.3) 1px,transparent 1px)",
-          backgroundSize: "52px 52px",
-        }}
-      />
-
       {/* NAVBAR */}
       <nav className="relative z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex min-h-[76px] w-full max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:min-h-20 sm:px-6 lg:px-8">
