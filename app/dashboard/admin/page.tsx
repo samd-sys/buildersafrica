@@ -1,63 +1,124 @@
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import {
-  LayoutDashboard,
-  LifeBuoy,
-  Users,
-  FolderKanban,
-  Search,
-  RefreshCw,
-  Loader2,
-  ShieldCheck,
-  Clock3,
-  CheckCircle2,
   AlertCircle,
+  ArrowRight,
   MessageSquare,
-  ChevronDown,
-  Mail,
-  CalendarDays,
-  X,
+  RefreshCw,
 } from "lucide-react";
 
-type TicketStatus = "open" | "in_progress" | "resolved";
+import {
+  STATUS_META,
+  STATUS_ORDER,
+  formatDateTime,
+  relativeTime,
+  type StatusFilter,
+  type SupportTicket,
+} from "./support/ticketUtils";
 
-type SupportTicket = {
-  id: string;
-  user_id: string;
-  user_email: string | null;
-  subject: string;
-  message: string;
-  status: TicketStatus;
-  created_at: string;
-};
+type LatestTicket = Pick<
+  SupportTicket,
+  "id" | "subject" | "status" | "created_at" | "user_email"
+>;
 
-const STATUS_OPTIONS: {
-  value: TicketStatus;
-  label: string;
-}[] = [
-  { value: "open", label: "Open" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "resolved", label: "Resolved" },
+const CARDS: { key: StatusFilter; label: string }[] = [
+  { key: "all", label: "Total Tickets" },
+  ...STATUS_ORDER.map((s) => ({
+    key: s,
+    label: STATUS_META[s].label,
+  })),
 ];
 
-export default function AdminDashboard() {
-  const router = useRouter();
+// ==========================================
+// Skeleton Loading Component
+// ==========================================
 
+function OverviewSkeleton() {
+  return (
+    <div
+      role="status"
+      aria-label="Loading support overview"
+      className="space-y-6"
+    >
+      {/* Page heading and refresh button */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="space-y-2">
+          <div className="h-5 w-40 animate-pulse rounded-md bg-surface-secondary" />
+          <div className="h-3 w-28 animate-pulse rounded-md bg-surface-secondary" />
+        </div>
+
+        <div className="h-10 w-24 animate-pulse rounded-xl bg-surface-secondary" />
+      </div>
+
+      {/* Statistics cards */}
+      <section
+        className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4"
+        aria-label="Loading ticket statistics"
+      >
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div
+            key={index}
+            className="space-y-4 rounded-2xl border border-border bg-surface p-4 sm:p-5"
+          >
+            <div className="h-3 w-24 max-w-full animate-pulse rounded bg-surface-secondary" />
+            <div className="h-8 w-16 animate-pulse rounded bg-surface-secondary" />
+          </div>
+        ))}
+      </section>
+
+      {/* Latest tickets skeleton */}
+      <section className="rounded-2xl border border-border bg-surface p-5 sm:p-6">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <div className="h-4 w-28 animate-pulse rounded bg-surface-secondary" />
+          <div className="h-3 w-20 animate-pulse rounded bg-surface-secondary" />
+        </div>
+
+        <div className="divide-y divide-border">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between gap-3 py-4"
+            >
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-4 w-3/4 max-w-64 animate-pulse rounded bg-surface-secondary" />
+                <div className="h-3 w-1/2 max-w-48 animate-pulse rounded bg-surface-secondary" />
+              </div>
+
+              <div className="flex shrink-0 items-center gap-2">
+                <div className="h-6 w-20 animate-pulse rounded-full bg-surface-secondary" />
+                <div className="hidden h-3 w-12 animate-pulse rounded bg-surface-secondary sm:block" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// ==========================================
+// Admin Overview Page
+// ==========================================
+
+export default function AdminOverviewPage() {
+  const [counts, setCounts] = useState<Record<StatusFilter, number> | null>(
+    null
+  );
+
+  const [latest, setLatest] = useState<LatestTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [tickets, setTickets] = useState<SupportTicket[]>([]);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedTicket, setSelectedTicket] =
-    useState<SupportTicket | null>(null);
-  const [updatingTicket, setUpdatingTicket] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  const loadDashboard = useCallback(async (isRefresh = false) => {
+  // ==========================================
+  // Load Dashboard Data
+  // ==========================================
+
+  const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
     } else {
@@ -67,172 +128,86 @@ export default function AdminDashboard() {
     setError("");
 
     try {
-      // Verify authenticated user
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+      // Get ticket counts directly from the database
+      const countOf = (status?: string) => {
+        const query = supabase
+          .from("support_tickets")
+          .select("id", { count: "exact", head: true });
 
-      if (authError || !user) {
-        router.replace("/login");
-        return;
+        return status ? query.eq("status", status) : query;
+      };
+
+      const [all, open, inProgress, resolved, recent] = await Promise.all([
+        countOf(),
+        countOf("open"),
+        countOf("in_progress"),
+        countOf("resolved"),
+        supabase
+          .from("support_tickets")
+          .select("id, subject, status, created_at, user_email")
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ]);
+
+      // Check for database errors
+      const failed = [all, open, inProgress, resolved, recent].find(
+        (r) => r.error
+      );
+
+      if (failed?.error) {
+        throw failed.error;
       }
 
-      // Verify admin membership
-      const { data: admin, error: adminError } = await supabase
-        .from("support_admins")
-        .select("user_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      // Update statistics
+      setCounts({
+        all: all.count ?? 0,
+        open: open.count ?? 0,
+        in_progress: inProgress.count ?? 0,
+        resolved: resolved.count ?? 0,
+      });
 
-      if (adminError || !admin) {
-        router.replace("/projects");
-        return;
-      }
-
-      // Retrieve support tickets
-      const { data, error: ticketError } = await supabase
-        .from("support_tickets")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (ticketError) {
-        throw ticketError;
-      }
-
-      setTickets((data || []) as SupportTicket[]);
+      // Update latest tickets
+      setLatest((recent.data ?? []) as LatestTicket[]);
     } catch (err) {
-      console.error("Admin dashboard error:", err);
-      setError("Unable to load dashboard data. Please try again.");
+      console.error("Admin overview error:", err);
+      setError("Unable to load the overview. Please try again.");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [router]);
+  }, []);
+
+  // ==========================================
+  // Initial Data Fetch
+  // ==========================================
 
   useEffect(() => {
-    loadDashboard();
-  }, [loadDashboard]);
+    load();
+  }, [load]);
 
-  // Update ticket status
-  const updateTicketStatus = async (
-    ticketId: string,
-    newStatus: TicketStatus
-  ) => {
-    setUpdatingTicket(ticketId);
-    setError("");
-
-    try {
-      const { error: updateError } = await supabase
-        .from("support_tickets")
-        .update({ status: newStatus })
-        .eq("id", ticketId);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      setTickets((previous) =>
-        previous.map((ticket) =>
-          ticket.id === ticketId
-            ? { ...ticket, status: newStatus }
-            : ticket
-        )
-      );
-
-      setSelectedTicket((previous) =>
-        previous?.id === ticketId
-          ? { ...previous, status: newStatus }
-          : previous
-      );
-    } catch (err) {
-      console.error("Ticket update error:", err);
-      setError("Could not update ticket status. Please try again.");
-    } finally {
-      setUpdatingTicket(null);
-    }
-  };
-
-  // Ticket statistics
-  const stats = useMemo(() => ({
-    total: tickets.length,
-    open: tickets.filter((t) => t.status === "open").length,
-    inProgress: tickets.filter((t) => t.status === "in_progress").length,
-    resolved: tickets.filter((t) => t.status === "resolved").length,
-  }), [tickets]);
-
-  // Search and filter tickets
-  const filteredTickets = useMemo(() => {
-    return tickets.filter((ticket) => {
-      const matchesStatus =
-        statusFilter === "all" || ticket.status === statusFilter;
-
-      const searchText = search.toLowerCase();
-
-      const matchesSearch =
-        ticket.subject.toLowerCase().includes(searchText) ||
-        ticket.message.toLowerCase().includes(searchText) ||
-        (ticket.user_email || "").toLowerCase().includes(searchText);
-
-      return matchesStatus && matchesSearch;
-    });
-  }, [tickets, search, statusFilter]);
-
-  const formatDate = (date: string) =>
-    new Date(date).toLocaleString("en-KE", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-
-  const statusStyle = (status: TicketStatus) => {
-    switch (status) {
-      case "open":
-        return "border-amber-500/20 bg-amber-500/10 text-amber-400";
-      case "in_progress":
-        return "border-blue-500/20 bg-blue-500/10 text-blue-400";
-      case "resolved":
-        return "border-emerald-500/20 bg-emerald-500/10 text-emerald-400";
-    }
-  };
-
-  const statusLabel = (status: TicketStatus) =>
-    STATUS_OPTIONS.find((option) => option.value === status)?.label || status;
+  // ==========================================
+  // Skeleton Loading State
+  // ==========================================
 
   if (loading) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="animate-spin text-[#00AFEF]" size={30} />
-          <p className="text-sm text-muted">Loading admin dashboard...</p>
-        </div>
-      </div>
-    );
+    return <OverviewSkeleton />;
   }
 
+  // ==========================================
+  // Main Dashboard
+  // ==========================================
+
   return (
-    <main className="min-h-screen space-y-8 bg-background p-5 text-foreground sm:p-8">
-
-      {/* Header */}
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <div className="mb-2 flex items-center gap-2 text-xs font-medium text-[#00AFEF]">
-            <ShieldCheck size={15} />
-            ADMINISTRATION
-          </div>
-
-          <h1 className="text-2xl font-bold tracking-tight">
-            Admin Dashboard
-          </h1>
-
-          <p className="mt-1 text-sm text-muted">
-            Manage and monitor your BuildersAfrica platform.
-          </p>
-        </div>
+    <div className="space-y-6">
+      {/* Header and Refresh */}
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold">Support overview</h2>
 
         <button
-          onClick={() => loadDashboard(true)}
+          type="button"
+          onClick={() => load(true)}
           disabled={refreshing}
-          className="flex items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-medium transition-colors hover:bg-surface-secondary disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:bg-surface-secondary disabled:opacity-50"
         >
           <RefreshCw
             size={15}
@@ -242,318 +217,121 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* Error */}
+      {/* Error Message */}
       {error && (
-        <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+        <div
+          role="alert"
+          className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-500"
+        >
           <AlertCircle size={16} />
           {error}
         </div>
       )}
 
-      {/* Navigation overview */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {[
-          {
-            label: "Overview",
-            icon: LayoutDashboard,
-            active: false,
-          },
-          {
-            label: "Support Inbox",
-            icon: LifeBuoy,
-            active: true,
-          },
-          {
-            label: "Users",
-            icon: Users,
-            active: false,
-          },
-          {
-            label: "Projects",
-            icon: FolderKanban,
-            active: false,
-          },
-        ].map((item) => (
-          <div
-            key={item.label}
-            className={`flex items-center gap-3 rounded-xl border p-4 ${
-              item.active
-                ? "border-[#00AFEF]/30 bg-[#00AFEF]/5"
-                : "border-border bg-surface"
-            }`}
+      {/* Ticket Statistics */}
+      <section
+        className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4"
+        aria-label="Ticket statistics"
+      >
+        {CARDS.map((card) => (
+          <Link
+            key={card.key}
+            href={
+              card.key === "all"
+                ? "/dashboard/admin/support"
+                : `/dashboard/admin/support?status=${card.key}`
+            }
+            className="group rounded-2xl border border-border bg-surface p-4 transition-colors hover:border-[#00AFEF]/40 sm:p-5"
           >
-            <item.icon
-              size={18}
-              className={item.active ? "text-[#00AFEF]" : "text-muted"}
-            />
-            <span className="text-sm font-medium">{item.label}</span>
-          </div>
-        ))}
-      </div>
+            <div className="flex items-center justify-between gap-2">
+              <p className="flex min-w-0 items-center gap-2 text-xs text-muted">
+                {card.key === "all" ? (
+                  <MessageSquare
+                    size={14}
+                    className="shrink-0 text-[#00AFEF]"
+                  />
+                ) : (
+                  <span
+                    className={`h-2 w-2 shrink-0 rounded-full ${STATUS_META[card.key].dot}`}
+                    aria-hidden="true"
+                  />
+                )}
 
-      {/* Statistics */}
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {[
-          {
-            label: "Total Tickets",
-            value: stats.total,
-            icon: MessageSquare,
-            color: "text-[#00AFEF]",
-          },
-          {
-            label: "Open",
-            value: stats.open,
-            icon: AlertCircle,
-            color: "text-amber-400",
-          },
-          {
-            label: "In Progress",
-            value: stats.inProgress,
-            icon: Clock3,
-            color: "text-blue-400",
-          },
-          {
-            label: "Resolved",
-            value: stats.resolved,
-            icon: CheckCircle2,
-            color: "text-emerald-400",
-          },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-2xl border border-border bg-surface p-5"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted">{stat.label}</p>
-              <stat.icon size={18} className={stat.color} />
+                <span className="truncate">{card.label}</span>
+              </p>
+
+              <ArrowRight
+                size={14}
+                className="shrink-0 text-muted opacity-0 transition-opacity group-hover:opacity-100"
+              />
             </div>
-            <p className="mt-3 text-2xl font-bold">{stat.value}</p>
-          </div>
+
+            <p className="mt-3 text-2xl font-bold">
+              {counts ? counts[card.key] : 0}
+            </p>
+          </Link>
         ))}
       </section>
 
-      {/* Support Inbox */}
-      <section className="space-y-5 rounded-2xl border border-border bg-surface p-5 sm:p-6">
+      {/* Latest Tickets */}
+      <section className="rounded-2xl border border-border bg-surface p-5 sm:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-sm font-semibold">Latest tickets</h3>
 
-        <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-          <div>
-            <div className="flex items-center gap-2">
-              <LifeBuoy size={18} className="text-[#00AFEF]" />
-              <h2 className="text-lg font-semibold">Support Inbox</h2>
-            </div>
-            <p className="mt-1 text-xs text-muted">
-              Review and manage support requests from builders.
-            </p>
-          </div>
-
-          <span className="text-xs text-muted">
-            {filteredTickets.length} of {tickets.length} tickets
-          </span>
+          <Link
+            href="/dashboard/admin/support"
+            className="flex shrink-0 items-center gap-1 text-xs font-medium text-[#00AFEF] hover:underline"
+          >
+            Open inbox
+            <ArrowRight size={12} />
+          </Link>
         </div>
 
-        {/* Search and filters */}
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="relative flex-1">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
-            />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search subject, message or email..."
-              className="w-full rounded-xl border border-border bg-surface-secondary py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-[#00AFEF]/60"
-            />
-          </div>
-
-          <div className="relative">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full appearance-none rounded-xl border border-border bg-surface-secondary px-4 py-3 pr-10 text-sm outline-none focus:border-[#00AFEF]/60 sm:w-48"
-            >
-              <option value="all">All statuses</option>
-              <option value="open">Open</option>
-              <option value="in_progress">In Progress</option>
-              <option value="resolved">Resolved</option>
-            </select>
-            <ChevronDown
-              size={15}
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted"
-            />
-          </div>
-        </div>
-
-        {/* Tickets */}
-        {filteredTickets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center">
-            <MessageSquare size={30} className="text-muted" />
-            <p className="mt-3 text-sm font-medium">No tickets found</p>
-            <p className="mt-1 text-xs text-muted">
-              Support requests will appear here when builders submit them.
-            </p>
-          </div>
+        {latest.length === 0 ? (
+          <p className="mt-4 rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted">
+            No support tickets yet.
+          </p>
         ) : (
-          <div className="space-y-3">
-            {filteredTickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                className="rounded-xl border border-border bg-background p-4 transition-colors hover:border-[#00AFEF]/30"
-              >
-                <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
-                  <button
-                    onClick={() => setSelectedTicket(ticket)}
-                    className="min-w-0 flex-1 text-left"
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-sm font-semibold">
-                        {ticket.subject}
-                      </h3>
-                      <span
-                        className={`rounded-full border px-2.5 py-1 text-[10px] font-medium ${statusStyle(ticket.status)}`}
-                      >
-                        {statusLabel(ticket.status)}
-                      </span>
-                    </div>
-
-                    <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted">
-                      {ticket.message}
+          <ul className="mt-4 divide-y divide-border">
+            {latest.map((ticket) => (
+              <li key={ticket.id}>
+                <Link
+                  href={`/dashboard/admin/support?ticket=${ticket.id}`}
+                  className="flex items-center justify-between gap-3 py-3 transition-colors hover:text-[#00AFEF] sm:gap-4"
+                >
+                  {/* Ticket Information */}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {ticket.subject}
                     </p>
 
-                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-muted">
-                      <span className="flex items-center gap-1.5">
-                        <Mail size={12} />
-                        {ticket.user_email || "Email unavailable"}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <CalendarDays size={12} />
-                        {formatDate(ticket.created_at)}
-                      </span>
-                    </div>
-                  </button>
-
-                  <div className="flex items-center gap-2 sm:w-40">
-                    <select
-                      value={ticket.status}
-                      disabled={updatingTicket === ticket.id}
-                      onChange={(e) =>
-                        updateTicketStatus(
-                          ticket.id,
-                          e.target.value as TicketStatus
-                        )
-                      }
-                      className="w-full rounded-lg border border-border bg-surface-secondary px-2.5 py-2 text-xs outline-none focus:border-[#00AFEF]/60 disabled:opacity-50"
-                    >
-                      {STATUS_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-
-                    {updatingTicket === ticket.id && (
-                      <Loader2
-                        size={14}
-                        className="shrink-0 animate-spin text-[#00AFEF]"
-                      />
-                    )}
+                    <p className="mt-0.5 truncate text-xs text-muted">
+                      {ticket.user_email || "Email unavailable"} ·{" "}
+                      {formatDateTime(ticket.created_at)}
+                    </p>
                   </div>
-                </div>
-              </div>
+
+                  {/* Ticket Status */}
+                  <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-secondary px-2.5 py-1 text-[11px] font-medium text-foreground">
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${STATUS_META[ticket.status].dot}`}
+                        aria-hidden="true"
+                      />
+
+                      {STATUS_META[ticket.status].label}
+                    </span>
+
+                    <span className="hidden text-[11px] text-muted sm:inline">
+                      {relativeTime(ticket.created_at)}
+                    </span>
+                  </div>
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </section>
-
-      {/* Ticket details modal */}
-      {selectedTicket && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-          onClick={() => setSelectedTicket(null)}
-        >
-          <div
-            className="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-border bg-surface p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-medium text-[#00AFEF]">
-                  SUPPORT REQUEST
-                </p>
-                <h2 className="mt-2 text-lg font-bold">
-                  {selectedTicket.subject}
-                </h2>
-              </div>
-
-              <button
-                onClick={() => setSelectedTicket(null)}
-                className="rounded-lg p-2 text-muted hover:bg-surface-secondary hover:text-foreground"
-                aria-label="Close ticket details"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="mt-5 space-y-4">
-              <div className="rounded-xl bg-surface-secondary p-4">
-                <p className="text-xs text-muted">Sender</p>
-                <p className="mt-1 break-all text-sm font-medium">
-                  {selectedTicket.user_email || "Email unavailable"}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-surface-secondary p-4">
-                <p className="text-xs text-muted">Submitted</p>
-                <p className="mt-1 text-sm">
-                  {formatDate(selectedTicket.created_at)}
-                </p>
-              </div>
-
-              <div>
-                <p className="mb-2 text-xs font-medium text-muted">
-                  MESSAGE
-                </p>
-                <p className="whitespace-pre-wrap break-words rounded-xl border border-border bg-background p-4 text-sm leading-relaxed">
-                  {selectedTicket.message}
-                </p>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-xs font-medium text-muted">
-                  TICKET STATUS
-                </label>
-                <select
-                  value={selectedTicket.status}
-                  disabled={updatingTicket === selectedTicket.id}
-                  onChange={(e) =>
-                    updateTicketStatus(
-                      selectedTicket.id,
-                      e.target.value as TicketStatus
-                    )
-                  }
-                  className="w-full rounded-xl border border-border bg-surface-secondary px-4 py-3 text-sm outline-none focus:border-[#00AFEF]/60 disabled:opacity-50"
-                >
-                  {STATUS_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {selectedTicket.user_email && (
-                <a
-                  href={`mailto:${selectedTicket.user_email}?subject=${encodeURIComponent(`Re: ${selectedTicket.subject}`)}`}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#00AFEF] px-4 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-[#00AFEF]/80"
-                >
-                  <Mail size={15} />
-                  Reply by Email
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </main>
+    </div>
   );
 }
