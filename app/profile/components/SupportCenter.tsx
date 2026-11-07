@@ -110,9 +110,14 @@ const { error: insertError } = await supabase
     },
   ]);
 
-    if (insertError) {
-      setError("Failed to submit ticket. Please try again.");
-      setStatus("error");
+if (insertError) {
+  // The database refuses a 6th ticket within an hour (see the admin SQL script)
+  setError(
+    insertError.message.includes("Too many support tickets")
+      ? "You've sent several tickets recently. Please wait a while before sending another."
+      : "Failed to submit ticket. Please try again."
+  );
+  setStatus("error");
     } else {
       setStatus("success");
       setSubject("");

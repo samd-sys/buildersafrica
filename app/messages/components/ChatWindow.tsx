@@ -12,7 +12,7 @@ import {
 import MessageBubble from "./MessageBubble";
 import MessageInput, { ReplyTo } from "./MessageInput";
 import MessageRequestBanner from "./MessageRequestBanner";
-import { Loader2, User } from "lucide-react";
+import { User } from "lucide-react";
 
 type Props = {
   conversation: DMConversation;
@@ -22,6 +22,49 @@ type Props = {
     status: "accepted" | "declined" | "blocked"
   ) => void;
 };
+
+function MessagesSkeleton() {
+  return (
+    <div className="space-y-5 animate-pulse">
+      {/* Received message */}
+      <div className="flex justify-start">
+        <div className="max-w-[75%] space-y-2">
+          <div className="h-3 w-20 rounded bg-surface-secondary" />
+          <div className="h-12 w-56 rounded-2xl rounded-tl-sm bg-surface-secondary" />
+        </div>
+      </div>
+
+      {/* Sent message */}
+      <div className="flex justify-end">
+        <div className="max-w-[75%] space-y-2">
+          <div className="ml-auto h-3 w-16 rounded bg-surface-secondary" />
+          <div className="h-12 w-64 rounded-2xl rounded-tr-sm bg-[#00AFEF]/10" />
+        </div>
+      </div>
+
+      {/* Received message */}
+      <div className="flex justify-start">
+        <div className="max-w-[75%] space-y-2">
+          <div className="h-3 w-24 rounded bg-surface-secondary" />
+          <div className="h-16 w-48 rounded-2xl rounded-tl-sm bg-surface-secondary" />
+        </div>
+      </div>
+
+      {/* Sent message */}
+      <div className="flex justify-end">
+        <div className="max-w-[75%] space-y-2">
+          <div className="ml-auto h-3 w-20 rounded bg-surface-secondary" />
+          <div className="h-12 w-52 rounded-2xl rounded-tr-sm bg-[#00AFEF]/10" />
+        </div>
+      </div>
+
+      {/* Received message */}
+      <div className="flex justify-start">
+        <div className="h-10 w-60 rounded-2xl rounded-tl-sm bg-surface-secondary" />
+      </div>
+    </div>
+  );
+}
 
 export default function ChatWindow({
   conversation: conv,
@@ -308,14 +351,10 @@ export default function ChatWindow({
 
       {/* Messages */}
       <div className="flex-1 space-y-1 overflow-y-auto px-4 py-4">
-        {loading ? (
-          <div className="flex h-full items-center justify-center">
-            <Loader2
-              size={24}
-              className="animate-spin text-[#00AFEF]"
-            />
-          </div>
-        ) : messages.length === 0 ? (
+        
+{loading ? (
+  <MessagesSkeleton />
+) : messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
             <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-secondary">
               {other.avatar_url ? (

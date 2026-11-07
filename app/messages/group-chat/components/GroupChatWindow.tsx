@@ -16,6 +16,55 @@ type Props = {
   onMuteToggle: (convId: string, muted: boolean) => void;
 };
 
+function GroupMessagesSkeleton() {
+  return (
+    <div className="animate-pulse space-y-5">
+      {/* Incoming group message */}
+      <div className="flex items-start gap-2">
+        <div className="h-8 w-8 shrink-0 rounded-full bg-surface-secondary" />
+        <div className="max-w-[75%] space-y-2">
+          <div className="h-3 w-24 rounded bg-surface-secondary" />
+          <div className="h-12 w-56 rounded-2xl rounded-tl-sm bg-surface-secondary" />
+        </div>
+      </div>
+
+      {/* Another incoming message */}
+      <div className="flex items-start gap-2">
+        <div className="h-8 w-8 shrink-0 rounded-full bg-surface-secondary" />
+        <div className="max-w-[75%] space-y-2">
+          <div className="h-3 w-20 rounded bg-surface-secondary" />
+          <div className="h-14 w-48 rounded-2xl rounded-tl-sm bg-surface-secondary" />
+        </div>
+      </div>
+
+      {/* Outgoing message */}
+      <div className="flex justify-end">
+        <div className="max-w-[75%] space-y-2">
+          <div className="ml-auto h-3 w-16 rounded bg-surface-secondary" />
+          <div className="h-12 w-64 rounded-2xl rounded-tr-sm bg-[#00AFEF]/10" />
+        </div>
+      </div>
+
+      {/* Incoming message */}
+      <div className="flex items-start gap-2">
+        <div className="h-8 w-8 shrink-0 rounded-full bg-surface-secondary" />
+        <div className="max-w-[75%] space-y-2">
+          <div className="h-3 w-28 rounded bg-surface-secondary" />
+          <div className="h-12 w-52 rounded-2xl rounded-tl-sm bg-surface-secondary" />
+        </div>
+      </div>
+
+      {/* Outgoing message */}
+      <div className="flex justify-end">
+        <div className="max-w-[75%] space-y-2">
+          <div className="ml-auto h-3 w-20 rounded bg-surface-secondary" />
+          <div className="h-14 w-52 rounded-2xl rounded-tr-sm bg-[#00AFEF]/10" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function GroupChatWindow({
   conversation: conv,
   currentUserId,
@@ -406,11 +455,9 @@ export default function GroupChatWindow({
 
       {/* Messages */}
       <div className="flex-1 space-y-1 overflow-y-auto px-4 py-4">
-        {loading ? (
-          <div className="flex h-full items-center justify-center">
-            <Loader2 size={24} className="animate-spin text-[#00AFEF]" />
-          </div>
-        ) : messages.length === 0 ? (
+       {loading ? (
+        <GroupMessagesSkeleton />
+          ) : messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
             <Users size={32} className="text-muted" />
 
