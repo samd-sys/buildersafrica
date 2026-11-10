@@ -145,7 +145,7 @@ function OverviewSkeleton() {
             <div className="mb-4 h-4 w-32 animate-pulse rounded bg-surface-secondary" />
 
             <div className="divide-y divide-border">
-              {Array.from({ length: 5 }).map((_, index) => (
+             {Array.from({ length: sectionIndex === 0 ? 4 : 5 }).map((_, index) => (
                 <div
                   key={index}
                   className="flex items-center gap-3 py-4"
@@ -198,7 +198,7 @@ export default function AdminOverviewPage() {
           .from("support_tickets")
           .select("id, subject, status, created_at, user_email")
           .order("created_at", { ascending: false })
-          .limit(5),
+          .limit(4),
       ]);
 
       const firstError = statsRes.error ?? activityRes.error ?? latestRes.error;

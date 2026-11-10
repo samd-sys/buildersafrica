@@ -4,9 +4,11 @@ import {
   jsonError,
 } from "@/lib/server/extensionAuth";
 import { getAuthorizedProjectIds } from "@/lib/server/projectAccess";
+import { getOtherSessionsDailyTotals } from "@/lib/server/dailyTotals";
 import {
   MAX_BODY_CHARS,
   MAX_SESSIONS_PER_REQUEST,
+  applyDailyCap,
   validateSession,
 } from "@/lib/server/activityValidation";
 
@@ -89,16 +91,43 @@ export async function POST(request: Request) {
     seenSessionIds.add(session.clientSessionId);
 
     // Keep only entries for projects this user is authorized for.
-    const kept = session.entries.filter((entry) =>
+    const authorized = session.entries.filter((entry) =>
       allowedProjects.has(entry.projectId)
     );
-    const dropped = session.entries.length - kept.length;
+    let dropped = session.entries.length - authorized.length;
+
+    if (authorized.length === 0) {
+      results.push({
+        clientSessionId: session.clientSessionId,
+        status: "rejected",
+        reason: "none of the projects are ones you can record activity for",
+      });
+      continue;
+    }
+
+    // Safety net: nobody can be active for more than 24 hours on one day.
+    let existingTotals: Map<string, number>;
+    try {
+      existingTotals = await getOtherSessionsDailyTotals(
+        admin,
+        auth.userId,
+        session.clientSessionId,
+        Array.from(new Set(authorized.map((entry) => entry.date)))
+      );
+    } catch {
+      results.push({ clientSessionId: session.clientSessionId, status: "retry" });
+      continue;
+    }
+
+    const capped = applyDailyCap(authorized, existingTotals);
+    const kept = capped.entries;
+    dropped += capped.droppedEntries;
 
     if (kept.length === 0) {
       results.push({
         clientSessionId: session.clientSessionId,
         status: "rejected",
-        reason: "none of the projects are ones you can record activity for",
+        reason: "the daily activity limit has been reached",
       });
       continue;
     }

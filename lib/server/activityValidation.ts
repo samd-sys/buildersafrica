@@ -12,7 +12,7 @@
 export const MAX_SESSIONS_PER_REQUEST = 25;
 export const MAX_ENTRIES_PER_SESSION = 200;
 export const MAX_BODY_CHARS = 1_000_000;
-
+export const MAX_ACTIVE_MS_PER_USER_DAY = 24 * 60 * 60 * 1000;
 const DAY_MS = 86_400_000;
 const MAX_SESSION_LENGTH_MS = 30 * DAY_MS;
 const MAX_SESSION_AGE_MS = 400 * DAY_MS;
@@ -194,4 +194,49 @@ export function validateSession(input: unknown, nowMs: number): ValidationResult
 			entries,
 		},
 	};
+}
+
+/**
+ * Keeps one person's total active time on any calendar day within `capMs`,
+ * counting what they already have stored from their OTHER sessions.
+ *
+ * This is a safety net against impossible values (for example a modified
+ * client claiming many full days of activity for a single date). It does not
+ * detect ordinary double counting from two VS Code windows being used at once,
+ * because that stays well under 24 hours.
+ *
+ * When a day is over the limit, that day's new entries are scaled down
+ * proportionally. Entries left with no time and no saves are dropped.
+ */
+export function applyDailyCap(
+	entries: ValidEntry[],
+	existingByDate: ReadonlyMap<string, number>,
+	capMs: number = MAX_ACTIVE_MS_PER_USER_DAY
+): { entries: ValidEntry[]; droppedEntries: number } {
+	const newTotals = new Map<string, number>();
+	for (const entry of entries) {
+		newTotals.set(entry.date, (newTotals.get(entry.date) ?? 0) + entry.activeMs);
+	}
+
+	const kept: ValidEntry[] = [];
+	let droppedEntries = 0;
+
+	for (const entry of entries) {
+		const total = newTotals.get(entry.date) ?? 0;
+		const remaining = Math.max(0, capMs - (existingByDate.get(entry.date) ?? 0));
+
+		let activeMs = entry.activeMs;
+		if (total > remaining) {
+			activeMs = Math.floor((entry.activeMs * remaining) / total);
+		}
+
+		if (activeMs === 0 && entry.filesSaved === 0) {
+			droppedEntries++;
+			continue;
+		}
+
+		kept.push({ ...entry, activeMs });
+	}
+
+	return { entries: kept, droppedEntries };
 }

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Regions, REGION_KEYS, RegionKey } from "./types/profile";
 import { toast } from "sonner";
+import { parseIsPublic, serializeIsPublic } from "@/lib/profileVisibility";
 
 function regionsFromList(list: unknown): Regions {
   const base = REGION_KEYS.reduce(
@@ -162,7 +163,7 @@ export default function Profile() {
           setLinkedin(data.linkedin_url || "");
           setWebsite(data.website_url || "");
           setAvatarUrl(data.avatar_url || "");
-          setIsPublic(data.is_public ?? true);
+          setIsPublic(parseIsPublic(data.is_public));
           setRegions(regionsFromList(data.visible_regions));
         }
       } catch (error) {
@@ -211,7 +212,7 @@ export default function Profile() {
               linkedin_url: linkedin,
               website_url: website,
               avatar_url: avatarUrl,
-              is_public: isPublic,
+              is_public: serializeIsPublic(isPublic),
               visible_regions: regionsToList(regions),
             },
           ],

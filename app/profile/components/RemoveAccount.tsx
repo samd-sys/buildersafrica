@@ -37,23 +37,40 @@ export default function RemoveAccount() {
       if (!session) throw new Error("Not authenticated.");
 
       // Call the deployed Edge Function
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-account`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+  `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-account`,
+  {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
 
-      const result = await response.json();
+const responseText = await response.text();
 
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to delete account.");
-      }
+let result;
 
+try {
+  result = JSON.parse(responseText);
+} catch {
+  result = { error: responseText };
+}
+
+console.log("Delete account response:", {
+  status: response.status,
+  result,
+});
+
+if (!response.ok) {
+  throw new Error(
+    result.error ||
+    result.message ||
+    `Account deletion failed (HTTP ${response.status}).`
+  );
+}
       // Sign out and redirect to home
       await supabase.auth.signOut();
       router.push("/");
