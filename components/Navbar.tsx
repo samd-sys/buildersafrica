@@ -5,6 +5,7 @@ import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 import { usePathname } from "next/navigation";
 import {
+  Activity,
   LayoutDashboard,
   Users,
   Bell,
@@ -253,10 +254,15 @@ export default function Navbar() {
       href: "/notifications",
       icon: Bell,
     },
-    {
+        {
       name: "Messages",
       href: "/messages",
       icon: MessageSquare,
+    },
+    {
+      name: "My Activity",
+      href: "/activity",
+      icon: Activity,
     },
     {
       name: "Profile",

@@ -9,7 +9,7 @@ import MemberList from "./components/MemberList";
 import MemberProfilePanel from "./components/MemberProfilePanel";
 import InviteModal from "./components/InviteModal";
 import TeamPageSkeleton from "./components/TeamPageSkeleton";
-import { ArrowLeft } from "lucide-react";
+import { Activity, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function TeamPage() {
@@ -366,14 +366,24 @@ const handleChangeRole = async (
       }}
     >
       <div className="mx-auto max-w-4xl space-y-6 px-4 py-10">
-        {/* Back link */}
-        <Link
-          href="/my-projects"
-          className="inline-flex items-center gap-1.5 rounded-md text-sm text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF]"
-        >
-          <ArrowLeft size={15} />
-          My Projects
-        </Link>
+                {/* Back link and activity link */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link
+            href="/my-projects"
+            className="inline-flex items-center gap-1.5 rounded-md text-sm text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF]"
+          >
+            <ArrowLeft size={15} />
+            My Projects
+          </Link>
+
+          <Link
+            href={`/team/${projectId}/activity`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-secondary px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:border-[#00AFEF]/30 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF]"
+          >
+            <Activity size={15} />
+            {isFounder ? "Team activity" : "My activity here"}
+          </Link>
+        </div>
 
         {/* Header */}
         <TeamHeader
