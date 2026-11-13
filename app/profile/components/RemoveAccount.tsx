@@ -5,18 +5,18 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { Trash2, AlertTriangle, Loader2 } from "lucide-react";
-import Link from "next/link";
 
 const CONSEQUENCES = [
-  "All your projects and their data will be permanently deleted",
-  "All your team memberships and applications will be removed",
-  "All your messages and conversations will be deleted",
-  "Your profile and connections will be erased",
+  "All your projects and their associated data will be permanently deleted",
+  "Your team memberships and applications will be removed",
+  "Your messages will be removed or anonymized; other participants' history will be preserved",
+  "Your profile, connections, and personal account data will be erased",
   "This action cannot be undone",
 ];
 
 export default function RemoveAccount() {
   const router = useRouter();
+
   const [confirmation, setConfirmation] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
@@ -24,7 +24,7 @@ export default function RemoveAccount() {
   const canDelete = confirmation === "DELETE";
 
   const handleDelete = async () => {
-    if (!canDelete) return;
+    if (!canDelete || status === "loading") return;
 
     setStatus("loading");
     setError("");
@@ -32,54 +32,80 @@ export default function RemoveAccount() {
     try {
       const {
         data: { session },
+        error: sessionError,
       } = await supabase.auth.getSession();
 
-      if (!session) throw new Error("Not authenticated.");
+      if (sessionError || !session) {
+        throw new Error("Your session has expired. Please sign in again.");
+      }
 
-      // Call the deployed Edge Function
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+const publishableKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      if (!supabaseUrl || !publishableKey) {
+        throw new Error("Application configuration is incomplete.");
+      }
 
       const response = await fetch(
-  `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-account`,
-  {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      "Content-Type": "application/json",
-    },
-  }
-);
+        `${supabaseUrl.replace(/\/$/, "")}/functions/v1/delete-account`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: publishableKey,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-const responseText = await response.text();
+      const responseText = await response.text();
 
-let result;
+      let result: {
+        success?: boolean;
+        error?: string;
+        message?: string;
+      };
 
-try {
-  result = JSON.parse(responseText);
-} catch {
-  result = { error: responseText };
-}
+      try {
+        result = JSON.parse(responseText);
+      } catch {
+        result = {
+          error: responseText || "The server returned an invalid response.",
+        };
+      }
 
-console.log("Delete account response:", {
-  status: response.status,
-  result,
-});
+      if (!response.ok || result.success !== true) {
+        throw new Error(
+          result.error ||
+            result.message ||
+            `Account deletion failed (HTTP ${response.status}).`
+        );
+      }
 
-if (!response.ok) {
-  throw new Error(
-    result.error ||
-    result.message ||
-    `Account deletion failed (HTTP ${response.status}).`
-  );
-}
-      // Sign out and redirect to home
-      await supabase.auth.signOut();
-      router.push("/");
+      // The server has confirmed that the Auth account was deleted.
+      // Clear only this browser's local session.
+      const { error: signOutError } = await supabase.auth.signOut({
+        scope: "local",
+      });
+
+      if (signOutError) {
+        console.error("Local sign-out warning:", signOutError);
+      }
+
+      router.replace("/");
+      router.refresh();
     } catch (err: unknown) {
+      console.error("Account deletion error:", err);
+
       setError(
         err instanceof Error
           ? err.message
           : "Something went wrong. Please try again or contact support."
       );
+
       setStatus("error");
     }
   };
@@ -91,8 +117,9 @@ if (!response.ok) {
         <h2 className="text-xl font-bold text-foreground">
           Remove Account
         </h2>
+
         <p className="text-sm text-muted">
-          Permanently delete your BuildersAfrica account and all associated data.
+          Permanently delete your BuildersAfrica account and associated data.
         </p>
       </div>
 
@@ -104,6 +131,7 @@ if (!response.ok) {
             className="shrink-0 text-red-500"
             aria-hidden="true"
           />
+
           <h3 className="text-sm font-semibold text-red-500">
             This action is permanent
           </h3>
@@ -135,6 +163,7 @@ if (!response.ok) {
             className="text-red-500"
             aria-hidden="true"
           />
+
           <h3 className="text-sm font-semibold text-foreground">
             Confirm Deletion
           </h3>
@@ -201,17 +230,17 @@ if (!response.ok) {
         </button>
 
         <p className="text-xs text-muted">
-            Need help instead?{" "}
-           <button
+          Need help instead?{" "}
+          <button
             type="button"
-           onClick={() => {
-            window.dispatchEvent(new Event("openSupportCenter"));
+            onClick={() => {
+              window.dispatchEvent(new Event("openSupportCenter"));
             }}
-          className="text-[#00AFEF] hover:underline"
-         >
-          Contact support
-        </button>
-         </p>
+            className="text-[#00AFEF] hover:underline"
+          >
+            Contact support
+          </button>
+        </p>
       </div>
     </div>
   );

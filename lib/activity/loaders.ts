@@ -94,15 +94,18 @@ export async function loadMyActivity(
   const titles = await loadProjectTitles(db, projectIds);
   const titleOf = (id: string) => titles.get(id) ?? "Unknown project";
 
-  const series30 = fillDailySeries(
-    dailyRows.map((r) => ({
-      activity_date: String(r.activity_date),
-      active_ms: num(r.active_ms),
-      files_saved: num(r.files_saved),
-    })),
-    todayKey,
-    30
-  );
+ 
+   const series30 = fillDailySeries(
+   dailyRows.map((r) => ({
+    activity_date: String(r.activity_date),
+    active_ms: num(r.active_ms),
+    files_saved: num(r.files_saved),
+    session_count: num(r.session_count),
+  })),
+  todayKey,
+  30
+);
+
 
   // Last 7 days per project, from the same daily rows.
   const weekStart = addDays(todayKey, -6);

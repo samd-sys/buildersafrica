@@ -1,9 +1,12 @@
+
 /** One calendar day of activity (the developer's local date). */
 export interface DayPoint {
-  date: string; // YYYY-MM-DD
+  date: string;
   activeMs: number;
   filesSaved: number;
+  sessions: number;
 }
+
 
 export type Recency = "today" | "this-week" | "earlier" | "none";
 
