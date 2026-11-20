@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { describeRecency, formatDuration } from "@/lib/activity/format";
+import type { ProjectGithubData } from "@/lib/activity/github";
 import type { ProjectActivityData } from "@/lib/activity/types";
+import { projectInsights } from "@/lib/insights";
 import PageShell from "./PageShell";
 import ContributorsTable from "./ContributorsTable";
+import GitHubReposSection from "@/components/github/GitHubReposSection";
+import GithubActivityView from "@/components/github/GithubActivityView";
+import InsightsPanel from "@/components/insights/InsightsPanel";
 import {
   ActivityBars,
   ActivityNote,
@@ -19,7 +24,15 @@ export type ProjectActivityState =
   | { status: "not-found" }
   | { status: "no-access" }
   | { status: "error"; message: string }
-  | { status: "ready"; data: ProjectActivityData; todayKey: string };
+  | {
+      status: "ready";
+      data: ProjectActivityData;
+      todayKey: string;
+      /** GitHub reports UTC days, so it has its own "today". */
+      todayUtc: string;
+      /** null when GitHub activity could not be loaded. */
+      github: ProjectGithubData | null;
+    };
 
 export default function ProjectActivityView({
   state,
@@ -32,6 +45,12 @@ export default function ProjectActivityView({
 }) {
   const title =
     state.status === "ready" ? `${state.data.project.title}: Activity` : "Project Activity";
+
+  // Insights about the whole team are for the founder only.
+  const insights =
+    state.status === "ready" && state.data.viewerIsFounder
+      ? projectInsights(state.data, state.github, state.todayKey, state.todayUtc)
+      : [];
 
   return (
     <PageShell
@@ -121,6 +140,8 @@ export default function ProjectActivityView({
             />
           </div>
 
+          {state.data.viewerIsFounder && <InsightsPanel insights={insights} />}
+
           <SectionCard
             title={state.data.viewerIsFounder ? "Team activity" : "Your activity"}
             subtitle="Active editing time per day over the last 30 days."
@@ -139,6 +160,19 @@ export default function ProjectActivityView({
               />
             </SectionCard>
           )}
+
+          <GithubActivityView
+            state={
+              state.github
+                ? { status: "ready", data: state.github, todayUtc: state.todayUtc }
+                : { status: "error", message: "Could not load GitHub activity." }
+            }
+            viewerIsFounder={state.data.viewerIsFounder}
+            names={Object.fromEntries(state.data.contributors.map((c) => [c.userId, c.name]))}
+            onRetry={onRetry}
+          />
+
+          {state.data.viewerIsFounder && <GitHubReposSection projectId={state.data.project.id} />}
 
           <ActivityNote>
             <p>

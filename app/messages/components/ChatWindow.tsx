@@ -87,22 +87,32 @@ export default function ChatWindow({
   const scrollToBottom = () =>
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 
-  const markAsRead = useCallback(async () => {
-    await supabase
-      .from("dm_messages")
-      .update({ is_read: true })
-      .eq("conversation_id", conv.id)
-      .eq("is_read", false)
-      .neq("sender_id", currentUserId);
 
-    setMessages((prev) =>
-      prev.map((m) =>
-        !m.is_read && m.sender_id !== currentUserId
-          ? { ...m, is_read: true }
-          : m
-      )
-    );
-  }, [conv.id, currentUserId]);
+const markAsRead = useCallback(async () => {
+  const { error } = await supabase
+    .from("dm_messages")
+    .update({ is_read: true })
+    .eq("conversation_id", conv.id)
+    .eq("is_read", false)
+    .neq("sender_id", currentUserId);
+
+  if (error) {
+    console.error("Error marking messages as read:", error);
+    return;
+  }
+
+  setMessages((prev) =>
+    prev.map((m) =>
+      !m.is_read && m.sender_id !== currentUserId
+        ? { ...m, is_read: true }
+        : m
+    )
+  );
+
+  // Refresh Navbar messages badge
+  window.dispatchEvent(new Event("messagesRead"));
+}, [conv.id, currentUserId]);
+
 
   const loadMessages = useCallback(async () => {
     setLoading(true);
@@ -163,12 +173,20 @@ export default function ChatWindow({
               ];
             });
 
-            if (newMsg.sender_id !== currentUserId) {
-              supabase
-                .from("dm_messages")
-                .update({ is_read: true })
-                .eq("id", newMsg.id);
-            }
+if (newMsg.sender_id !== currentUserId) {
+  supabase
+    .from("dm_messages")
+    .update({ is_read: true })
+    .eq("id", newMsg.id)
+    .then(({ error }) => {
+      if (error) {
+        console.error("Error marking new message as read:", error);
+        return;
+      }
+
+      window.dispatchEvent(new Event("messagesRead"));
+    });
+}
           }
 
           if (payload.eventType === "UPDATE") {
@@ -238,23 +256,39 @@ export default function ChatWindow({
 
     if (!content && !fileUrl) return;
 
-    await supabase.from("dm_messages").insert([
-      {
-        conversation_id: conv.id,
-        sender_id: currentUserId,
-        content: content || null,
-        file_url: fileUrl,
-        file_type: fileType,
-        file_name: fileName,
-        file_size: fileSize,
-        is_read: false,
-        reply_to_id: reply?.id || null,
-        reply_to_content: reply?.content || null,
-        reply_to_sender: reply?.senderName || null,
-      },
-    ]);
+const { data: newMessage, error: sendError } = await supabase
+  .from("dm_messages")
+  .insert({
+    conversation_id: conv.id,
+    sender_id: currentUserId,
+    content: content || null,
+    file_url: fileUrl,
+    file_type: fileType,
+    file_name: fileName,
+    file_size: fileSize,
+    is_read: false,
+    reply_to_id: reply?.id || null,
+    reply_to_content: reply?.content || null,
+    reply_to_sender: reply?.senderName || null,
+  })
+  .select("*")
+  .single();
 
-    setReplyTo(null);
+if (sendError) {
+  console.error("Failed to send private message:", sendError);
+  alert("Message could not be sent: " + sendError.message);
+  return;
+}
+
+if (newMessage) {
+  setMessages((prev) => {
+    if (prev.some((m) => m.id === newMessage.id)) return prev;
+
+    return [...prev, newMessage as DMMessage];
+  });
+}
+
+setReplyTo(null);
   };
 
   const handleDelete = async (id: string) => {

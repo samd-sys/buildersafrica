@@ -10,6 +10,7 @@ import MemberProfilePanel from "./components/MemberProfilePanel";
 import InviteModal from "./components/InviteModal";
 import TeamPageSkeleton from "./components/TeamPageSkeleton";
 import { Activity, ArrowLeft } from "lucide-react";
+import TeamWorkspaceSidebar from "./components/TeamWorkspaceSidebar";
 import Link from "next/link";
 
 export default function TeamPage() {
@@ -350,79 +351,76 @@ const handleChangeRole = async (
 
   if (!project) return null;
 
-  return (
-    <div
-      className={`mt-6 min-h-[calc(100vh-2rem)] rounded-3xl border border-border bg-background text-foreground transition-all duration-500 ease-in-out ${
-        isSidebarHovered ? "ml-16" : "ml-0"
-      }`}
-      style={{
-        transform: isSidebarHovered ? "scale(1.005)" : "scale(1)",
+  
+return (
+  <div
+    className={`mt-6 min-h-[calc(100vh-2rem)] rounded-3xl border border-border bg-background text-foreground transition-all duration-500 ease-in-out ${
+      isSidebarHovered ? "ml-16" : "ml-0"
+    }`}
+    style={{
+      transform: isSidebarHovered ? "scale(1.005)" : "scale(1)",
+      filter: isSidebarHovered ? "brightness(0.98)" : "brightness(1)",
+      transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+    }}
+  >
+    <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
 
-        filter: isSidebarHovered
-          ? "brightness(0.98)"
-          : "brightness(1)",
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
 
-        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-      }}
-    >
-      <div className="mx-auto max-w-4xl space-y-6 px-4 py-10">
-                {/* Back link and activity link */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Link
-            href="/my-projects"
-            className="inline-flex items-center gap-1.5 rounded-md text-sm text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF]"
-          >
-            <ArrowLeft size={15} />
-            My Projects
-          </Link>
-
-          <Link
-            href={`/team/${projectId}/activity`}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-secondary px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:border-[#00AFEF]/30 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00AFEF]"
-          >
-            <Activity size={15} />
-            {isFounder ? "Team activity" : "My activity here"}
-          </Link>
-        </div>
-
-        {/* Header */}
-        <TeamHeader
-          project={project}
-          members={members}
-          isFounder={isFounder}
-          onInvite={() => setInviteOpen(true)}
+        {/* Workspace Sidebar */}
+        <TeamWorkspaceSidebar
+          projectId={projectId}
+          activePage="overview"
         />
 
-        {/* Member list */}
-        <MemberList
-          members={members}
-          isFounder={isFounder}
-          onViewProfile={setSelectedMember}
-          onRemove={handleRemoveMember}
-          onChangeRole={(member) => setSelectedMember(member)}
-        />
+        {/* Main Content */}
+        <main className="min-w-0 flex-1 space-y-6">
+
+          {/* Team Header */}
+          <div id="overview">
+            <TeamHeader
+              project={project}
+              members={members}
+              isFounder={isFounder}
+              onInvite={() => setInviteOpen(true)}
+            />
+          </div>
+
+          {/* Team Members */}
+          <section id="team-members" className="scroll-mt-24">
+            <MemberList
+              members={members}
+              isFounder={isFounder}
+              onViewProfile={setSelectedMember}
+              onRemove={handleRemoveMember}
+              onChangeRole={(member) => setSelectedMember(member)}
+            />
+          </section>
+
+        </main>
       </div>
-
-      {/* Member profile panel */}
-      <MemberProfilePanel
-        member={selectedMember}
-        isFounder={isFounder}
-        onClose={() => setSelectedMember(null)}
-        onRemove={handleRemoveMember}
-        onChangeRole={handleChangeRole}
-      />
-
-      {/* Invite modal */}
-      <InviteModal
-        isOpen={inviteOpen}
-        onClose={() => setInviteOpen(false)}
-        projectId={projectId}
-        projectTitle={project.title}
-        existingMemberIds={[
-          ...members.map((m) => m.user_id),
-          currentUserId,
-        ]}
-      />
     </div>
-  );
+
+    {/* Member Profile Panel */}
+    <MemberProfilePanel
+      member={selectedMember}
+      isFounder={isFounder}
+      onClose={() => setSelectedMember(null)}
+      onRemove={handleRemoveMember}
+      onChangeRole={handleChangeRole}
+    />
+
+    {/* Invite Modal */}
+    <InviteModal
+      isOpen={inviteOpen}
+      onClose={() => setInviteOpen(false)}
+      projectId={projectId}
+      projectTitle={project.title}
+      existingMemberIds={[
+        ...members.map((m) => m.user_id),
+        currentUserId,
+      ]}
+    />
+  </div>
+);
 }

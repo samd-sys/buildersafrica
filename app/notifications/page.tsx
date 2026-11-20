@@ -164,43 +164,69 @@ export default function NotificationsPage() {
     0
   );
 
-  // Mark a notification as read.
-  const markRead = async (id: string) => {
-    await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("id", id);
+// Mark a notification as read.
+const markRead = async (id: string) => {
+  const notification = notifications.find((item) => item.id === id);
 
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === id
-          ? { ...notification, is_read: true }
-          : notification
-      )
-    );
-  };
+  if (!notification || notification.is_read) return;
 
-  // Mark all notifications in the active tab as read.
-  const handleMarkAllRead = async () => {
-    const ids = byTab[activeTab]
-      .filter((notification) => !notification.is_read)
-      .map((notification) => notification.id);
+  const { error } = await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("id", id);
 
-    if (ids.length === 0) return;
+  if (error) {
+    console.error("Failed to mark notification as read:", error);
+    return;
+  }
 
-    await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .in("id", ids);
+  // Update the notification page immediately.
+  setNotifications((prev) =>
+    prev.map((item) =>
+      item.id === id ? { ...item, is_read: true } : item
+    )
+  );
 
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        ids.includes(notification.id)
-          ? { ...notification, is_read: true }
-          : notification
-      )
-    );
-  };
+  // Notify the Navbar badge.
+  window.dispatchEvent(
+    new CustomEvent("notificationRead", {
+      detail: { count: 1 },
+    })
+  );
+};
+// Mark all notifications in the active tab as read.
+const handleMarkAllRead = async () => {
+  const ids = byTab[activeTab]
+    .filter((notification) => !notification.is_read)
+    .map((notification) => notification.id);
+
+  if (ids.length === 0) return;
+
+  const { error } = await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .in("id", ids);
+
+  if (error) {
+    console.error("Failed to mark all notifications as read:", error);
+    return;
+  }
+
+  setNotifications((prev) =>
+    prev.map((notification) =>
+      ids.includes(notification.id)
+        ? { ...notification, is_read: true }
+        : notification
+    )
+  );
+
+  // Update the Navbar badge immediately.
+  window.dispatchEvent(
+    new CustomEvent("notificationRead", {
+      detail: { count: ids.length },
+    })
+  );
+};
 
   // Delete a notification.
   const handleDelete = async (id: string) => {

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { loadMyActivity } from "@/lib/activity/loaders";
+import { loadMyGithub, type MyGithubData } from "@/lib/activity/github";
 import { toDateKey } from "@/lib/activity/dates";
 import MyActivityView, { type MyActivityState } from "@/components/activity/MyActivityView";
 
@@ -22,9 +23,22 @@ export default function MyActivityPage() {
         return;
       }
 
-      const todayKey = toDateKey(new Date());
+      const now = new Date();
+      const todayKey = toDateKey(now);
+      // GitHub reports UTC days, so it uses the UTC date as "today".
+      const todayUtc = now.toISOString().slice(0, 10);
+
       const data = await loadMyActivity(supabase, user.id, todayKey);
-      setState({ status: "ready", data, todayKey });
+
+      // GitHub trouble must never hide the editor activity, so it fails on its own.
+      let github: MyGithubData | null = null;
+      try {
+        github = await loadMyGithub(supabase, user.id, todayUtc);
+      } catch {
+        github = null;
+      }
+
+      setState({ status: "ready", data, todayKey, todayUtc, github });
     } catch (error) {
       setState({
         status: "error",

@@ -6,8 +6,10 @@ import EmailSettings from "./EmailSettings";
 import SecurityPrivacy from "./SecurityPrivacy";
 import SupportCenter from "./SupportCenter";
 import RemoveAccount from "./RemoveAccount";
-import { useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import { ProfileData, ProfileSetters, RegionKey } from "../types/profile";
+
 import {
   User,
   Mail,
@@ -18,7 +20,28 @@ import {
   Check,
   ChevronDown,
 } from "lucide-react";
-import { useState } from "react";
+
+// Custom GitHub icon
+function GitHubIcon({
+  size = 18,
+  className = "",
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      width={size}
+      height={size}
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.55.1.76-.24.76-.54v-2.1c-3.1.67-3.76-1.32-3.76-1.32-.5-1.3-1.24-1.65-1.24-1.65-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.7 2.62 1.21 3.26.93.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.14a10.6 10.6 0 0 1 5.56 0c2.12-1.44 3.05-1.14 3.05-1.14.61 1.54.23 2.68.11 2.96.72.78 1.15 1.78 1.15 3 0 4.29-2.61 5.23-5.1 5.51.4.35.76 1.03.76 2.08v3.09c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z" />
+    </svg>
+  );
+}
 
 type ProfileEditorProps = {
   profile: ProfileData;
@@ -44,6 +67,13 @@ const navItems = [
     icon: HelpCircle,
     danger: false,
   },
+  {
+    key: "github",
+    label: "Connect GitHub",
+    icon: GitHubIcon,
+    danger: false,
+    customColor: "#00AFEF",
+  },
   { key: "remove", label: "Remove Account", icon: Trash2, danger: true },
 ] as const;
 
@@ -57,25 +87,36 @@ export default function ProfileEditor({
   onAvatarFileSelected,
   isSaving = false,
 }: ProfileEditorProps) {
-const [activeTab, setActiveTab] = useState<TabKey>("profile");
+  const [activeTab, setActiveTab] = useState<TabKey>("profile");
+  const [showVisibilitySettings, setShowVisibilitySettings] =
+    useState(false);
 
-useEffect(() => {
-  const handleOpenSupport = () => {
-    setActiveTab("support");
-  };
+  useEffect(() => {
+    const handleOpenSupport = () => {
+      setActiveTab("support");
+    };
 
-  window.addEventListener("openSupportCenter", handleOpenSupport);
+    window.addEventListener("openSupportCenter", handleOpenSupport);
 
-  return () => {
-    window.removeEventListener("openSupportCenter", handleOpenSupport);
-  };
-}, []);  const [showVisibilitySettings, setShowVisibilitySettings] = useState(false);
+    return () => {
+      window.removeEventListener("openSupportCenter", handleOpenSupport);
+    };
+  }, []);
 
   const toggleRegion = (regionKey: RegionKey) => {
     setters.setRegions((prev) => ({
       ...prev,
       [regionKey]: !prev[regionKey],
     }));
+  };
+
+  const handleTabChange = (selectedTab: TabKey) => {
+    if (selectedTab === "github") {
+      window.location.href = "/profile/github";
+      return;
+    }
+
+    setActiveTab(selectedTab);
   };
 
   const activeItem =
@@ -91,7 +132,7 @@ useEffect(() => {
           : ""
       }`}
     >
-      {/* MOBILE SETTINGS NAVIGATION */}
+      {/* MOBILE SETTINGS NAVIGATION */} 
       <div className="relative z-20 border-b border-border bg-sidebar p-3 md:hidden">
         <label
           htmlFor="profile-settings-tab"
@@ -106,7 +147,7 @@ useEffect(() => {
             name="profile-settings-tab"
             value={activeTab}
             onChange={(event) =>
-              setActiveTab(event.target.value as TabKey)
+              handleTabChange(event.target.value as TabKey)
             }
             className={`w-full appearance-none rounded-xl border border-border bg-surface py-3 pl-3 pr-10 text-sm font-medium outline-none transition-colors focus:border-[#00AFEF] ${
               activeItem.danger ? "text-red-500" : "text-foreground"
@@ -151,26 +192,30 @@ useEffect(() => {
             aria-label="Profile settings navigation"
             className="mt-7 space-y-1.5"
           >
-            {navItems.map(({ key, label, icon: Icon, danger }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setActiveTab(key)}
-                aria-current={activeTab === key ? "page" : undefined}
-                className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors ${
-                  activeTab === key
-                    ? danger
-                      ? "border-l-2 border-red-500 bg-red-500/5 pl-2.5 text-red-500"
-                      : "border-l-2 border-[#00AFEF] bg-surface-secondary pl-2.5 text-foreground"
-                    : danger
-                      ? "text-muted hover:bg-red-500/5 hover:text-red-500"
-                      : "text-muted hover:bg-surface-secondary hover:text-foreground"
-                }`}
-              >
-                <Icon size={18} className="shrink-0 opacity-80" />
-                <span>{label}</span>
-              </button>
-            ))}
+            
+{navItems.map(({ key, label, icon: Icon, danger }) => (
+  <button
+    key={key}
+    type="button"
+    onClick={() => handleTabChange(key)}
+    aria-current={activeTab === key ? "page" : undefined}
+    className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors ${
+      key === "github"
+        ? "text-[#00AFEF] hover:bg-[#00AFEF]/10"
+        : activeTab === key
+          ? danger
+            ? "border-l-2 border-red-500 bg-red-500/5 pl-2.5 text-red-500"
+            : "border-l-2 border-[#00AFEF] bg-surface-secondary pl-2.5 text-foreground"
+          : danger
+            ? "text-muted hover:bg-red-500/5 hover:text-red-500"
+            : "text-muted hover:bg-surface-secondary hover:text-foreground"
+    }`}
+  >
+    <Icon size={18} className="shrink-0 opacity-80" />
+    <span>{label}</span>
+  </button>
+))}
+
           </nav>
         </div>
 

@@ -9,15 +9,13 @@ import { ShieldCheck } from "lucide-react";
 
 const TABS = [
   { href: "/dashboard/admin", label: "Overview", exact: true },
+  { href: "/dashboard/admin/users", label: "Registered Users", exact: false },
+  { href: "/dashboard/admin/projects", label: "Projects", exact: false },
+  { href: "/dashboard/admin/activities", label: "Activities", exact: false },
   { href: "/dashboard/admin/support", label: "Support Inbox", exact: false },
 ];
 
-// Reusable skeleton block
-function Skeleton({
-  className = "",
-}: {
-  className?: string;
-}) {
+function Skeleton({ className = "" }: { className?: string }) {
   return (
     <div
       className={`animate-pulse rounded-lg bg-surface-secondary ${className}`}
@@ -25,32 +23,28 @@ function Skeleton({
   );
 }
 
-// Admin dashboard loading skeleton
 function AdminSkeleton() {
   return (
     <main className="min-h-screen bg-background p-4 text-foreground sm:p-8">
       <div className="mx-auto w-full max-w-6xl space-y-6">
-        {/* Header skeleton */}
         <header className="space-y-3">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-8 w-56 max-w-full" />
           <Skeleton className="h-4 w-72 max-w-full" />
         </header>
 
-        {/* Navigation skeleton */}
         <nav className="flex gap-5 border-b border-border pb-3">
-          <Skeleton className="h-8 w-24" />
-          <Skeleton className="h-8 w-32" />
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Skeleton key={index} className="h-8 w-24" />
+          ))}
         </nav>
 
-        {/* Dashboard content skeleton */}
         <section className="space-y-6">
-          {/* Stats cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, index) => (
               <div
                 key={index}
-                className="rounded-xl border border-border bg-surface p-5 space-y-4"
+                className="space-y-4 rounded-xl border border-border bg-surface p-5"
               >
                 <Skeleton className="h-4 w-28" />
                 <Skeleton className="h-8 w-20" />
@@ -59,27 +53,21 @@ function AdminSkeleton() {
             ))}
           </div>
 
-          {/* Main content cards */}
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             {Array.from({ length: 2 }).map((_, index) => (
               <div
                 key={index}
-                className="rounded-xl border border-border bg-surface p-5 space-y-5"
+                className="space-y-5 rounded-xl border border-border bg-surface p-5"
               >
                 <Skeleton className="h-5 w-40" />
 
                 {Array.from({ length: 3 }).map((_, row) => (
-                  <div
-                    key={row}
-                    className="flex items-center gap-3"
-                  >
+                  <div key={row} className="flex items-center gap-3">
                     <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
-
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-3 w-2/3" />
                       <Skeleton className="h-3 w-1/3" />
                     </div>
-
                     <Skeleton className="h-7 w-16" />
                   </div>
                 ))}
@@ -163,7 +151,6 @@ export default function AdminLayout({
     };
   }, [router]);
 
-  // Show skeleton while checking admin access
   if (checking || !allowed) {
     return <AdminSkeleton />;
   }

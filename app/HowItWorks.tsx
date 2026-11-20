@@ -98,13 +98,15 @@ const FOUNDER_STEPS: Step[] = [
   },
 ];
 
+
 /* Dashed connector between steps */
 function Connector({ flip }: { flip: boolean }) {
   return (
-    <div className="relative hidden h-20 w-full items-center justify-center md:flex">
+    <div className="relative hidden w-full items-center justify-center md:flex">
       <svg
+        viewBox="0 0 1000 100"
         preserveAspectRatio="none"
-        className="h-full w-full"
+        className="h-full w-full overflow-visible"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
@@ -112,18 +114,19 @@ function Connector({ flip }: { flip: boolean }) {
         <path
           d={
             flip
-              ? "M300 0 C300 35 180 45 180 80"
-              : "M300 0 C300 35 420 45 420 80"
+              ? "M400 0 C400 40 650 55 650 100"
+              : "M650 0 C650 40 400 55 400 100"
           }
-          strokeWidth="1.5"
-          strokeDasharray="6 5"
+          stroke="#00AFEF"
+          strokeWidth="2"
+          strokeDasharray="7 7"
           strokeLinecap="round"
-          strokeLinejoin="round"
         />
       </svg>
     </div>
   );
 }
+
 
 /* Responsive step card */
 function StepCard({
@@ -144,7 +147,7 @@ function StepCard({
       <div
         className={`relative z-10 -mb-3 flex w-full ${
           isFinal
-            ? "mt-10 justify-center md:mt-20"
+            ? "mt-3 justify-center md:-mt-6"
             : isRight
               ? "mt-5 md:-mt-12 md:justify-end md:pr-80"
               : "mt-5 md:-mt-12 md:justify-start md:pl-80"
@@ -212,10 +215,8 @@ export default function HowItWorks() {
   return (
     <section className="relative w-full max-w-full overflow-x-clip px-4 py-16 sm:py-20 md:px-8 md:py-8">
 
-      {/* TOP DIVIDER */}
-      <div className="absolute left-1/2 top-0 h-px w-full max-w-5xl -translate-x-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-      <div className="relative z-10 mx-auto w-full max-w-5xl space-y-12 sm:space-y-14">
+      
+      <div className="relative z-10 mx-auto w-full max-w-5xl -mt-26 space-y-12 sm:space-y-14">
 
         {/* HEADING */}
         <div className="mx-auto max-w-2xl space-y-4 text-center">
@@ -223,10 +224,9 @@ export default function HowItWorks() {
             How <span className="text-white">Builders</span>
             <span className="text-[#00AFEF]">Africa</span> Works
           </h2>
-
           <p className="text-sm leading-relaxed text-white/50 sm:text-base">
             From profile to production — here is the path that builders and
-            founders across the continent are taking every day.
+          founders across the continent are taking every day.
           </p>
         </div>
 

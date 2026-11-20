@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Info } from "lucide-react";
 import { formatDayLabel, formatDuration } from "@/lib/activity/format";
 import type { DayPoint, Recency } from "@/lib/activity/types";
-
+import type { CountPoint } from "@/lib/activity/github";
 export function SectionCard({
   title,
   subtitle,
@@ -188,5 +188,56 @@ export function Avatar({ name, url }: { name: string; url: string | null }) {
     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-surface-secondary text-xs font-bold text-muted">
       {initials || "?"}
     </span>
+  );
+}
+
+/** A bar chart of counts per day (commits, for example). A different colour from the editor-time chart on purpose. */
+export function CountBars({ series, unit }: { series: CountPoint[]; unit: string }) {
+  const max = Math.max(0, ...series.map((point) => point.count));
+  const total = series.reduce((sum, point) => sum + point.count, 0);
+
+  if (total === 0) {
+    return (
+      <p className="py-10 text-center text-sm text-muted">
+        No {unit} in the last {series.length} days.
+      </p>
+    );
+  }
+
+  const first = series[0];
+  const middle = series[Math.floor(series.length / 2)];
+  const last = series[series.length - 1];
+
+  return (
+    <div>
+      <div
+        role="img"
+        aria-label={`Daily ${unit} over the last ${series.length} days, ${total} in total`}
+        className="flex h-40 items-end gap-1"
+      >
+        {series.map((point) => {
+          const percent = max === 0 ? 0 : Math.round((point.count / max) * 100);
+
+          return (
+            <div
+              key={point.date}
+              title={`${formatDayLabel(point.date)}: ${point.count} ${unit}`}
+              className="flex h-full min-w-0 flex-1 items-end"
+            >
+              <div
+                className={point.count > 0 ? "w-full rounded-t bg-violet-400" : "w-full rounded-t bg-border"}
+                style={{ height: point.count > 0 ? `${Math.max(percent, 4)}%` : "2px" }}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-2 flex justify-between text-[11px] text-muted">
+        <span>{formatDayLabel(first.date)}</span>
+        <span>{formatDayLabel(middle.date)}</span>
+        <span>{formatDayLabel(last.date)}</span>
+      </div>
+    </div>
   );
 }

@@ -294,21 +294,43 @@ export default function GroupChatWindow({
     const mentionMatches = content.match(/@([\w\s]+?)(?=\s|$)/g) || [];
     const mentionedNames = mentionMatches.map((m) => m.slice(1).trim());
 
-    await supabase.from("messages").insert([
-      {
-        conversation_id: conv.id,
-        sender_id: currentUserId,
-        content: content || null,
-        attachment_url: attachmentUrl,
-        attachment_type: attachmentType,
-        is_read: false,
-        reply_to_id: reply?.id || null,
-        reply_to_content: reply?.content || null,
-        reply_to_sender: reply?.senderName || null,
-      },
-    ]);
+const { data: newMessage, error: sendError } = await supabase
+  .from("messages")
+  .insert({
+    conversation_id: conv.id,
+    sender_id: currentUserId,
+    content: content || null,
+    attachment_url: attachmentUrl,
+    attachment_type: attachmentType,
+    is_read: false,
+    reply_to_id: reply?.id || null,
+    reply_to_content: reply?.content || null,
+    reply_to_sender: reply?.senderName || null,
+  })
+  .select("*")
+  .single();
 
-    setReplyTo(null);
+if (sendError) {
+  console.error("Failed to send group message:", sendError);
+  alert("Message could not be sent: " + sendError.message);
+  return;
+}
+
+if (newMessage) {
+  const enrichedMessage: GroupMessage = {
+    ...newMessage,
+    senderName: "You",
+    senderAvatar: "",
+  };
+
+  setMessages((prev) => {
+    if (prev.some((m) => m.id === newMessage.id)) return prev;
+
+    return [...prev, enrichedMessage];
+  });
+}
+
+setReplyTo(null);
 
     // Notify all team members except sender (skip muted)
     const { data: members } = await supabase

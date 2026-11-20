@@ -9,16 +9,9 @@ type InlineEditableProps = {
   rows?: number;
   inputClassName?: string;
   displayClassName?: string;
+  validate?: (value: string) => string | null;
 };
 
-/**
- * Renders `value` as plain text. Clicking it swaps the text for an
- * input (or textarea) in the exact same spot. Enter / blur commits
- * the change via onSave, Escape cancels back to the previous value.
- *
- * This is the building block behind every "click any element to
- * edit it" field in ProfilePreview.
- */
 export default function InlineEditable({
   value,
   onSave,
@@ -27,15 +20,19 @@ export default function InlineEditable({
   rows = 3,
   inputClassName = "",
   displayClassName = "",
+  validate,
 }: InlineEditableProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(value);
+  const [error, setError] = useState("");
+
   const fieldRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
-  // Keep the draft synchronized when the external value changes
-  // while the field isn't actively being edited.
   useEffect(() => {
-    if (!isEditing) setDraft(value);
+    if (!isEditing) {
+      setDraft(value);
+      setError("");
+    }
   }, [value, isEditing]);
 
   useEffect(() => {
@@ -46,8 +43,19 @@ export default function InlineEditable({
   }, [isEditing]);
 
   const commit = () => {
-    setIsEditing(false);
     const trimmed = draft.trim();
+
+    if (validate) {
+      const validationError = validate(trimmed);
+
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
+    }
+
+    setError("");
+    setIsEditing(false);
 
     if (trimmed !== value) {
       onSave(trimmed);
@@ -56,13 +64,13 @@ export default function InlineEditable({
 
   const cancel = () => {
     setDraft(value);
+    setError("");
     setIsEditing(false);
   };
 
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    // Enter commits single-line fields; textarea Enter adds a new line.
     if (e.key === "Enter" && as === "input") {
       e.preventDefault();
       commit();
@@ -75,34 +83,48 @@ export default function InlineEditable({
   };
 
   if (isEditing) {
-    const sharedClassName = `w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-foreground outline-none focus:border-[#00AFEF] focus:ring-1 focus:ring-[#00AFEF]/30 transition-colors placeholder:text-muted ${inputClassName}`;
-
-    if (as === "textarea") {
-      return (
-        <textarea
-          ref={fieldRef as React.RefObject<HTMLTextAreaElement>}
-          rows={rows}
-          value={draft}
-          placeholder={placeholder}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={handleKeyDown}
-          className={`${sharedClassName} resize-none`}
-        />
-      );
-    }
+    const sharedClassName = `w-full bg-surface border ${
+      error ? "border-red-500" : "border-border"
+    } rounded-lg px-2.5 py-1.5 text-foreground outline-none focus:border-[#00AFEF] focus:ring-1 focus:ring-[#00AFEF]/30 transition-colors placeholder:text-muted ${inputClassName}`;
 
     return (
-      <input
-        ref={fieldRef as React.RefObject<HTMLInputElement>}
-        type="text"
-        value={draft}
-        placeholder={placeholder}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={handleKeyDown}
-        className={sharedClassName}
-      />
+      <div className="w-full">
+        {as === "textarea" ? (
+          <textarea
+            ref={fieldRef as React.RefObject<HTMLTextAreaElement>}
+            rows={rows}
+            value={draft}
+            placeholder={placeholder}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              if (error) setError("");
+            }}
+            onBlur={commit}
+            onKeyDown={handleKeyDown}
+            className={`${sharedClassName} resize-none`}
+          />
+        ) : (
+          <input
+            ref={fieldRef as React.RefObject<HTMLInputElement>}
+            type="text"
+            value={draft}
+            placeholder={placeholder}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              if (error) setError("");
+            }}
+            onBlur={commit}
+            onKeyDown={handleKeyDown}
+            className={sharedClassName}
+          />
+        )}
+
+        {error && (
+          <p className="mt-1.5 text-[11px] leading-relaxed text-red-500">
+            {error}
+          </p>
+        )}
+      </div>
     );
   }
 

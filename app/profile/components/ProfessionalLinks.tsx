@@ -1,5 +1,6 @@
 
 import React from "react";
+import Link from "next/link";
 import InputField from "./InputField";
 import { ProfileData, ProfileSetters } from "../types/profile";
 
@@ -30,6 +31,7 @@ export default function ProfessionalLinks({ profile, setters }: Props) {
 
       <div className="grid w-full min-w-0 grid-cols-1 gap-5">
         <div className="min-w-0">
+        <div className="min-w-0">
           <InputField
             label="GitHub"
             placeholder="https://github.com/username"
@@ -37,6 +39,17 @@ export default function ProfessionalLinks({ profile, setters }: Props) {
             helperText="Link to your code workspace profile."
             onChange={(e) => setters.setGithub(e.target.value)}
           />
+
+          <p className="mt-2 text-xs leading-relaxed text-muted">
+            A typed link is not verified.{" "}
+            <Link
+              href="/profile/github"
+              className="font-medium text-[#00AFEF] hover:underline"
+            >
+              Connect your GitHub account
+            </Link>{" "}
+            so your development activity can be attributed to you.
+          </p>
         </div>
 
         <div className="min-w-0">
@@ -58,6 +71,7 @@ export default function ProfessionalLinks({ profile, setters }: Props) {
             onChange={(e) => setters.setWebsite(e.target.value)}
           />
         </div>
+      </div>
       </div>
     </section>
   );

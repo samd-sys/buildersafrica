@@ -122,110 +122,154 @@ export default function Navbar() {
     setDmUnreadCount(count ?? 0);
   };
 
-  // Load user data and subscribe to updates
-  useEffect(() => {
-    let notifChannel: ReturnType<typeof supabase.channel> | null = null;
-    let dmChannel: ReturnType<typeof supabase.channel> | null = null;
-    let cancelled = false;
+ // Load user data and subscribe to updates
 
-    const handleAvatarUpdated = (
-      event: CustomEvent<{ avatarUrl: string }>
-    ) => {
-      setAvatarUrl(event.detail.avatarUrl || "");
-    };
+useEffect(() => {
+  let notifChannel: ReturnType<typeof supabase.channel> | null = null;
+  let dmChannel: ReturnType<typeof supabase.channel> | null = null;
+  let cancelled = false;
 
-    window.addEventListener(
+  // Listen for avatar updates
+  const handleAvatarUpdated = (
+    event: CustomEvent<{ avatarUrl: string }>
+  ) => {
+    setAvatarUrl(event.detail.avatarUrl || "");
+  };
+
+  // Listen for notifications marked as read
+  const handleNotificationRead = (
+    event: CustomEvent<{ count: number }>
+  ) => {
+    const count = event.detail?.count ?? 0;
+
+    setUnreadCount((prev) => Math.max(0, prev - count));
+  };
+
+  // Listen for messages marked as read
+  const handleMessagesRead = () => {
+    loadDmUnreadCount();
+  };
+
+  // Register event listeners
+  window.addEventListener(
+    "avatarUpdated",
+    handleAvatarUpdated as EventListener
+  );
+
+  window.addEventListener(
+    "notificationRead",
+    handleNotificationRead as EventListener
+  );
+
+  window.addEventListener(
+    "messagesRead",
+    handleMessagesRead
+  );
+
+  const setupSubscriptions = async () => {
+    // Load initial user data
+    await Promise.all([
+      loadAvatar(),
+      loadUnreadCount(),
+      loadDmUnreadCount(),
+    ]);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user || cancelled) {
+      if (!cancelled) {
+        setIsAdmin(false);
+      }
+      return;
+    }
+
+    const userId = user.id;
+
+    // Check administrator membership
+    const { data: adminRecord, error: adminError } = await supabase
+      .from("support_admins")
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!cancelled) {
+      setIsAdmin(!adminError && !!adminRecord);
+    }
+
+    if (cancelled) return;
+
+    // Notification badge updates
+    notifChannel = supabase
+      .channel("navbar-notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+        },
+        (payload) => {
+          const row = (payload.new ?? payload.old ?? {}) as {
+            user_id?: string;
+          };
+
+          if (row.user_id !== userId) return;
+
+          loadUnreadCount();
+        }
+      )
+      .subscribe();
+
+    // Direct message badge updates
+    dmChannel = supabase
+      .channel("navbar-dm-messages")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "dm_messages",
+        },
+        () => {
+          loadDmUnreadCount();
+        }
+      )
+      .subscribe();
+  };
+
+  setupSubscriptions();
+
+  // Cleanup
+  return () => {
+    cancelled = true;
+
+    window.removeEventListener(
       "avatarUpdated",
       handleAvatarUpdated as EventListener
     );
 
-    const setupSubscriptions = async () => {
-      await Promise.all([
-        loadAvatar(),
-        loadUnreadCount(),
-        loadDmUnreadCount(),
-      ]);
+    window.removeEventListener(
+      "notificationRead",
+      handleNotificationRead as EventListener
+    );
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    window.removeEventListener(
+      "messagesRead",
+      handleMessagesRead
+    );
 
-      if (!user || cancelled) {
-        setIsAdmin(false);
-        return;
-      }
+    if (notifChannel) {
+      supabase.removeChannel(notifChannel);
+    }
 
-      const userId = user.id;
+    if (dmChannel) {
+      supabase.removeChannel(dmChannel);
+    }
+  };
+}, []);
 
-      // Check administrator membership
-      const { data: adminRecord, error: adminError } = await supabase
-        .from("support_admins")
-        .select("user_id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (!cancelled) {
-        setIsAdmin(!adminError && !!adminRecord);
-      }
-
-      // Notification badge updates
-      notifChannel = supabase
-        .channel("navbar-notifications")
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "notifications",
-          },
-          (payload) => {
-            const row = (payload.new ?? payload.old ?? {}) as {
-              user_id?: string;
-            };
-
-            if (row.user_id !== userId) return;
-
-            loadUnreadCount();
-          }
-        )
-        .subscribe();
-
-      // Direct message badge updates
-      dmChannel = supabase
-        .channel("navbar-dm-messages")
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "dm_messages",
-          },
-          () => {
-            loadDmUnreadCount();
-          }
-        )
-        .subscribe();
-    };
-
-    setupSubscriptions();
-
-    return () => {
-      cancelled = true;
-
-      window.removeEventListener(
-        "avatarUpdated",
-        handleAvatarUpdated as EventListener
-      );
-
-      if (notifChannel) {
-        supabase.removeChannel(notifChannel);
-      }
-
-      if (dmChannel) {
-        supabase.removeChannel(dmChannel);
-      }
-    };
-  }, []);
 
   // Hide navbar on landing, login, and signup pages
   const hideNavbarOn = ["/", "/login", "/signup"];
