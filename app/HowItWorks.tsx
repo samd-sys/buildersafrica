@@ -219,37 +219,37 @@ export default function HowItWorks() {
       <div className="relative z-10 mx-auto w-full max-w-5xl -mt-26 space-y-12 sm:space-y-14">
 
         {/* HEADING */}
-        <div className="mx-auto max-w-2xl space-y-4 text-center">
-          <h2 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
-            How <span className="text-white">Builders</span>
-            <span className="text-[#00AFEF]">Africa</span> Works
-          </h2>
-          <p className="text-sm leading-relaxed text-white/50 sm:text-base">
-            From profile to production — here is the path that builders and
-          founders across the continent are taking every day.
-          </p>
-        </div>
+<div className="mx-auto max-w-2xl space-y-4 text-center">
+  <h2 className="text-3xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white sm:text-4xl md:text-5xl">
+    How <span className="text-slate-900 dark:text-white">Builders</span>
+    <span className="text-[#00AFEF]">Africa</span> Works
+  </h2>
 
+  <p className="text-sm leading-relaxed text-slate-600 dark:text-white/50 sm:text-base">
+    From profile to production — here is the path that builders and
+    founders across the continent are taking every day.
+  </p>
+</div>
         {/* BUILDER / FOUNDER TOGGLE */}
-        <div className="flex justify-center">
-          <div className="flex max-w-full gap-1 rounded-2xl border border-white/10 bg-white/[0.03] p-1.5">
-            {(["builder", "founder"] as const).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setTab(t)}
-                aria-pressed={tab === t}
-                className={`rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 sm:px-8 sm:text-sm ${
-                  tab === t
-                    ? "bg-[#00AFEF] text-slate-950 shadow-md shadow-[#00AFEF]/20"
-                    : "text-white/50 hover:text-white"
-                }`}
-              >
-                {t === "builder" ? "For Builders" : "For Founders"}
-              </button>
-            ))}
-          </div>
-        </div>
+<div className="flex justify-center">
+  <div className="flex max-w-full gap-1 rounded-2xl border border-slate-200 bg-slate-100/70 p-1.5 dark:border-white/10 dark:bg-white/[0.03]">
+    {(["builder", "founder"] as const).map((t) => (
+      <button
+        key={t}
+        type="button"
+        onClick={() => setTab(t)}
+        aria-pressed={tab === t}
+        className={`rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 sm:px-8 sm:text-sm ${
+          tab === t
+            ? "bg-[#00AFEF] text-slate-950 shadow-md shadow-[#00AFEF]/20"
+            : "text-slate-600 hover:text-slate-950 dark:text-white/50 dark:hover:text-white"
+        }`}
+      >
+        {t === "builder" ? "For Builders" : "For Founders"}
+      </button>
+    ))}
+  </div>
+</div>
 
         {/* JOURNEY */}
         <div className="mt-8 space-y-8 sm:mt-12 sm:space-y-10 md:mt-24 md:space-y-0">

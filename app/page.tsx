@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -17,7 +18,7 @@ export default function LandingPage() {
   useEffect(() => {
     let mounted = true;
 
-    const fetchSocialProof = async () => {
+    const fetchSocialProof = async (): Promise<void> => {
       const { data, error } = await supabase.rpc(
         "get_landing_social_proof"
       );
@@ -35,9 +36,11 @@ export default function LandingPage() {
       }
     };
 
-    fetchSocialProof();
+    void fetchSocialProof();
 
-    const interval = setInterval(fetchSocialProof, 60000);
+    const interval = setInterval(() => {
+      void fetchSocialProof();
+    }, 60000);
 
     return () => {
       mounted = false;
@@ -128,7 +131,7 @@ export default function LandingPage() {
                     />
                   </div>
                 ))}
- 
+
                 {/* FALLBACK IF NO AVATARS */}
                 {socialProof.avatars.length === 0 && (
                   <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-slate-800 text-sm font-bold text-cyan-400 sm:h-12 sm:w-12">
@@ -149,22 +152,23 @@ export default function LandingPage() {
                 <p className="mt-1 text-xs text-white/75 sm:text-sm">
                   have joined{" "}
                   <span className="font-semibold text-white">
-                    BuildersAfrica               
+                    BuildersAfrica
                   </span>
                 </p>
               </div>
             </div>
           )}
 
-          {/* SIGN UP BUTTON */} 
-          <Link 
+          {/* SIGN UP BUTTON */}
+          <Link
             href="/signup"
             className="inline-flex -mt-7 items-center justify-center rounded-3xl bg-[#00AFEF] px-12 py-3 text-sm font-semibold text-slate-950 transition-all duration-300 hover:-translate-y-1 hover:bg-cyan-300 hover:shadow-lg hover:shadow-cyan-500/20 sm:px-12 sm:py-3.5 sm:text-base"
           >
-            Sign Up Now  
+            Sign Up Now
           </Link>
         </div>
       </section>
+
       {/* HOW IT WORKS */}
       <HowItWorks />
     </main>
